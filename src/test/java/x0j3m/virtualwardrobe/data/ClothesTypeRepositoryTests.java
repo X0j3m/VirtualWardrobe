@@ -16,7 +16,7 @@ public class ClothesTypeRepositoryTests {
     private ClothesTypeRepository clothesTypeRepository;
 
     @Test
-    void findAll_shouldReturnEmptyWhenNoClothesTypes() {
+    void findAll_whenTableIsEmpty_shouldReturnEmpty() {
         Iterable<ClothesType> allClothesTypes = clothesTypeRepository.findAll();
         Assertions.assertNotNull(allClothesTypes);
         Assertions.assertFalse(allClothesTypes.iterator().hasNext());
@@ -35,7 +35,7 @@ public class ClothesTypeRepositoryTests {
     }
 
     @Test
-    void findAll_shouldReturnAllSavedClothesTypes() {
+    void findAll_whenTableIsNotEmpty_shouldReturnAllSavedClothesTypes() {
         ClothesType clothesType1 = new ClothesType("testName1", ClothesLayer.BASE_LAYER);
         ClothesType clothesType2 = new ClothesType("testName2", ClothesLayer.BOTTOMWEAR);
         ClothesType clothesType3 = new ClothesType("testName3", ClothesLayer.ACCESSORY);
@@ -50,7 +50,7 @@ public class ClothesTypeRepositoryTests {
     }
 
     @Test
-    void findById_shouldReturnClothesTypeWhenExists() {
+    void findById_whenClothesTypeExists_shouldReturnClothesType() {
         ClothesType clothesType = new ClothesType("testName", ClothesLayer.MID_LAYER);
         ClothesType saved = clothesTypeRepository.save(clothesType);
 
@@ -61,5 +61,11 @@ public class ClothesTypeRepositoryTests {
         Assertions.assertEquals(saved.getId(), found.getId());
         Assertions.assertEquals(saved.getName(), found.getName());
         Assertions.assertEquals(saved.getLayer(), found.getLayer());
+    }
+
+    @Test
+    void findById_whenClothesTypeDoesNotExist_shouldReturnNull() {
+        ClothesType found = clothesTypeRepository.findById(999L).orElse(null);
+        Assertions.assertNull(found);
     }
 }

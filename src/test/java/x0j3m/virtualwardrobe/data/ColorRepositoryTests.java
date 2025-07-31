@@ -15,7 +15,7 @@ public class ColorRepositoryTests {
     private ColorRepository colorRepository;
 
     @Test
-    void findAll_shouldReturnEmptyWhenNoColors() {
+    void findAll_whenTableIsEmpty_shouldReturnEmpty() {
         Iterable<Color> allColors = colorRepository.findAll();
         Assertions.assertNotNull(allColors);
         Assertions.assertFalse(allColors.iterator().hasNext());
@@ -33,7 +33,7 @@ public class ColorRepositoryTests {
     }
 
     @Test
-    void findAll_shouldReturnAllSavedColors() {
+    void findAll_whenTableIsNotEmpty_shouldReturnAllSavedColors() {
         Color color1 = new Color("testColor1");
         Color color2 = new Color("testColor2");
         Color color3 = new Color("testColor3");
@@ -48,7 +48,7 @@ public class ColorRepositoryTests {
     }
 
     @Test
-    void findById_shouldReturnColorWhenExists() {
+    void findById_whenColorExists_shouldReturnColor() {
         Color color = new Color("testColor");
         Color saved = colorRepository.save(color);
 
@@ -57,5 +57,11 @@ public class ColorRepositoryTests {
         Color found = colorRepository.findById(id).orElse(null);
         Assertions.assertNotNull(found);
         Assertions.assertEquals(saved.getName(), found.getName());
+    }
+
+    @Test
+    void findById_whenColorDoesNotExist_shouldReturnNull() {
+        Color found = colorRepository.findById(999L).orElse(null);
+        Assertions.assertNull(found);
     }
 }
