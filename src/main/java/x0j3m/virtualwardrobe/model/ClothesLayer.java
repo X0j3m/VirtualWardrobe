@@ -1,4 +1,4 @@
-package x0j3m.model;
+package x0j3m.virtualwardrobe.model;
 
 public enum ClothesLayer {
     BASE_LAYER,
@@ -8,9 +8,4 @@ public enum ClothesLayer {
     FOOTWEAR,
     HEADWEAR,
     BOTTOMWEAR;
-
-    @Override
-    public String toString() {
-        return this.toString().toLowerCase().replace("_", "");
-    }
 }
