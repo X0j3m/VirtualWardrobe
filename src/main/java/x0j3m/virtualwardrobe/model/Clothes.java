@@ -17,7 +17,7 @@ public class Clothes {
     @ManyToOne
     @JoinColumn(name = "color_id")
     private final Color color;
-    @ManyToOne
+    @ManyToOne(targetEntity = ClothesType.class)
     @JoinColumn(name = "type_id")
     private final ClothesType type;
 
