@@ -9,5 +9,6 @@ import java.util.Optional;
 @Repository
 public interface ClothesTypeRepository extends CrudRepository<ClothesType, Long> {
     Optional<ClothesType> findByName(String name);
+
     void deleteByName(String name);
 }
