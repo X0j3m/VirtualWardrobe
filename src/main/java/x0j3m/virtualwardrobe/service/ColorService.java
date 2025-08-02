@@ -48,6 +48,10 @@ public class ColorService {
         return colorRepository.findByName(colorName).orElse(null);
     }
 
+    public Iterable<Color> getAllColors() {
+        return colorRepository.findAll();
+    }
+
     public void deleteColor(Long id) throws IllegalArgumentException {
         if (id == null) {
             throw new IllegalArgumentException("Color id cannot be null");

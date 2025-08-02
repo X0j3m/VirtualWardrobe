@@ -10,6 +10,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import x0j3m.virtualwardrobe.data.ColorRepository;
 import x0j3m.virtualwardrobe.model.Color;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Optional;
 
 @ExtendWith(MockitoExtension.class)
@@ -158,6 +161,30 @@ public class ColorServiceTests {
     @Test
     void getColor_whenColorNameIsEmpty_shouldThrowIllegalArgumentException() {
         Assertions.assertThrows(IllegalArgumentException.class, () -> colorService.getColor(""));
+    }
+
+    @Test
+    void getAllColors_whenTableIsEmpty_shouldReturnEmpty() {
+        Mockito.when(colorRepository.findAll()).thenReturn(Collections.emptyList());
+        Iterable<Color> allColors = colorService.getAllColors();
+        Assertions.assertNotNull(allColors);
+        Assertions.assertFalse(allColors.iterator().hasNext());
+    }
+
+    @Test
+    void getAllColors_whenTableIsNotEmpty_shouldReturnAllSavedColors() {
+        Color color1 = new Color(1L, "testColor1");
+        Color color2 = new Color(2L, "testColor2");
+        Color color3 = new Color(3L, "testColor3");
+        Iterable<Color> colorsIterable = Arrays.asList(color1, color2, color3);
+
+        Mockito.when(colorRepository.findAll()).thenReturn(colorsIterable);
+
+        Iterable<Color> allColors = colorService.getAllColors();
+
+        Assertions.assertNotNull(allColors);
+        Assertions.assertTrue(allColors.iterator().hasNext());
+        Assertions.assertEquals(3, allColors.spliterator().getExactSizeIfKnown());
     }
 
     @Test
