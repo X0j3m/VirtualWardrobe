@@ -3,4 +3,8 @@ package x0j3m.virtualwardrobe.data;
 import org.springframework.data.repository.CrudRepository;
 import x0j3m.virtualwardrobe.model.Clothes;
 
-public interface ClothesRepository extends CrudRepository<Clothes, Long> {}
+public interface ClothesRepository extends CrudRepository<Clothes, Long> {
+    Iterable<Clothes> findByColor_Name(String colorName);
+
+    Iterable<Clothes> findByType_Name(String typeName);
+}

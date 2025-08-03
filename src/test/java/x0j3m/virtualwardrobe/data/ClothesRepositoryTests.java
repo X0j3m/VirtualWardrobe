@@ -12,6 +12,8 @@ import x0j3m.virtualwardrobe.model.ClothesType;
 import x0j3m.virtualwardrobe.model.ClothesLayer;
 import x0j3m.virtualwardrobe.model.Color;
 
+import java.util.List;
+
 
 @DataJpaTest
 @AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2)
@@ -30,7 +32,11 @@ public class ClothesRepositoryTests {
         clothesTypeRepository.deleteAll();
 
         colorRepository.save(new Color("testColor1"));
-        clothesTypeRepository.save(new ClothesType("testType", ClothesLayer.ACCESSORY));
+        colorRepository.save(new Color("testColor2"));
+        colorRepository.save(new Color("testColor3"));
+        clothesTypeRepository.save(new ClothesType("testType1", ClothesLayer.ACCESSORY));
+        clothesTypeRepository.save(new ClothesType("testType2", ClothesLayer.ACCESSORY));
+        clothesTypeRepository.save(new ClothesType("testType3", ClothesLayer.ACCESSORY));
     }
 
     @Test
@@ -112,6 +118,71 @@ public class ClothesRepositoryTests {
     void findById_whenClothesDoesNotExist_shouldReturnNull() {
         Clothes found = clothesRepository.findById(999L).orElse(null);
         Assertions.assertNull(found);
+    }
+
+    @Test
+    void findByColor_Name_whenClothesExists_shouldReturnClothes() {
+        List<Color> colors = (List<Color>) colorRepository.findAll();
+        List<ClothesType> types = (List<ClothesType>) clothesTypeRepository.findAll();
+
+        Clothes testClothes1 = new Clothes(colors.getFirst(), types.get(0));
+        Clothes testClothes2 = new Clothes(colors.getFirst(), types.get(1));
+        Clothes testClothes3 = new Clothes(colors.getLast(), types.get(2));
+
+        clothesRepository.save(testClothes1);
+        clothesRepository.save(testClothes2);
+        clothesRepository.save(testClothes3);
+
+        List<Clothes> found = (List<Clothes>) clothesRepository.findByColor_Name(colors.getFirst().getName());
+
+        Assertions.assertNotNull(found);
+        Assertions.assertEquals(2, found.spliterator().getExactSizeIfKnown());
+        Assertions.assertTrue(found.iterator().hasNext());
+        Assertions.assertEquals(testClothes1, found.getFirst());
+        Assertions.assertEquals(testClothes2, found.getLast());
+    }
+
+    @Test
+    void findByColor_Name_whenClothesDoesNotExist_shouldReturnEmpty() {
+        List<Clothes> found = (List<Clothes>) clothesRepository.findByColor_Name("testColor");
+        Assertions.assertNotNull(found);
+        Assertions.assertEquals(0, found.spliterator().getExactSizeIfKnown());
+        Assertions.assertFalse(found.iterator().hasNext());
+    }
+
+    @Test
+    void findByType_Name_whenClothesExists_shouldReturnClothes() {
+        List<Color> colors = (List<Color>) colorRepository.findAll();
+        List<ClothesType> types = (List<ClothesType>) clothesTypeRepository.findAll();
+        Clothes testClothes1 = new Clothes(colors.getFirst(), types.getFirst());
+        Clothes testClothes2 = new Clothes(colors.get(1), types.getFirst());
+        Clothes testClothes3 = new Clothes(colors.getLast(), types.getLast());
+
+        clothesRepository.save(testClothes1);
+        clothesRepository.save(testClothes2);
+        clothesRepository.save(testClothes3);
+
+        List<Clothes> found = (List<Clothes>) clothesRepository.findByType_Name(types.getFirst().getName());
+
+        Assertions.assertNotNull(found);
+        Assertions.assertEquals(2, found.spliterator().getExactSizeIfKnown());
+        Assertions.assertTrue(found.iterator().hasNext());
+        Assertions.assertEquals(testClothes1, found.getFirst());
+        Assertions.assertEquals(testClothes1.getId(), found.getFirst().getId());
+        Assertions.assertEquals(testClothes1.getColor(), found.getFirst().getColor());
+        Assertions.assertEquals(testClothes1.getType(), found.getFirst().getType());
+        Assertions.assertEquals(testClothes2, found.getLast());
+        Assertions.assertEquals(testClothes2.getId(), found.getLast().getId());
+        Assertions.assertEquals(testClothes2.getColor(), found.getLast().getColor());
+        Assertions.assertEquals(testClothes2.getType(), found.getLast().getType());
+    }
+
+    @Test
+    void findByType_Name_whenClothesDoesNotExist_shouldReturnEmpty() {
+        List<Clothes> found = (List<Clothes>) clothesRepository.findByType_Name("testType");
+        Assertions.assertNotNull(found);
+        Assertions.assertEquals(0, found.spliterator().getExactSizeIfKnown());
+        Assertions.assertFalse(found.iterator().hasNext());
     }
 
     @Test
