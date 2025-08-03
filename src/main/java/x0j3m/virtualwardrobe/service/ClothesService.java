@@ -3,7 +3,6 @@ package x0j3m.virtualwardrobe.service;
 import org.springframework.stereotype.Service;
 import x0j3m.virtualwardrobe.data.ClothesRepository;
 import x0j3m.virtualwardrobe.model.Clothes;
-import x0j3m.virtualwardrobe.model.Color;
 
 @Service
 public class ClothesService {

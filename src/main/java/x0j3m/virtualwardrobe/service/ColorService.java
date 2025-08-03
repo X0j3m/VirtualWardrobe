@@ -31,7 +31,7 @@ public class ColorService {
         return saveColor(new Color(colorName));
     }
 
-    public Color getColor(Long id) {
+    public Color getColor(Long id) throws IllegalArgumentException {
         if (id == null) {
             throw new IllegalArgumentException("Color id cannot be null");
         }
