@@ -1,5 +1,7 @@
 package x0j3m.virtualwardrobe.service;
 
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import x0j3m.virtualwardrobe.data.ColorRepository;
 import x0j3m.virtualwardrobe.model.Color;
@@ -48,8 +50,8 @@ public class ColorService {
         return colorRepository.findByName(colorName).orElse(null);
     }
 
-    public Iterable<Color> getAllColors() {
-        return colorRepository.findAll();
+    public Iterable<Color> getAllColors(int page, int size, Sort sort) {
+        return colorRepository.findAll(PageRequest.of(page, size, sort)).getContent();
     }
 
     public void deleteColor(Long id) throws IllegalArgumentException {
@@ -66,19 +68,21 @@ public class ColorService {
         }
     }
 
-    public Color updateColorName(Long id, String colorName) throws IllegalArgumentException {
+    public Color updateColor(Long id, Color update) throws IllegalArgumentException {
         if (id == null) {
             throw new IllegalArgumentException("Color id cannot be null");
         }
         if (id < 1) {
             throw new IllegalArgumentException("Color id must be greater than 0");
         }
-        if (colorName == null) {
-            throw new IllegalArgumentException("Color name cannot be null");
+        if (update == null) {
+            throw new IllegalArgumentException("Color cannot be null");
         }
 
-        colorRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Color with id " + id + " does not exist"));
-        Color updatedColor = new Color(id, colorName);
+        Color color = colorRepository.findById(id).orElseThrow(
+                () -> new IllegalArgumentException("Color with id " + id + " does not exist")
+        );
+        Color updatedColor = Color.merge(color, update);
         return colorRepository.save(updatedColor);
     }
 }

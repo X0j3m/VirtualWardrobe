@@ -7,13 +7,14 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import x0j3m.virtualwardrobe.data.ColorRepository;
 import x0j3m.virtualwardrobe.model.Color;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Optional;
+import java.util.*;
 
 @ExtendWith(MockitoExtension.class)
 public class ColorServiceTests {
@@ -165,8 +166,11 @@ public class ColorServiceTests {
 
     @Test
     void getAllColors_whenTableIsEmpty_shouldReturnEmpty() {
-        Mockito.when(colorRepository.findAll()).thenReturn(Collections.emptyList());
-        Iterable<Color> allColors = colorService.getAllColors();
+        Mockito.when(colorRepository.findAll(Mockito.any(PageRequest.class)))
+                .thenReturn(new PageImpl<>(Collections.emptyList()));
+
+        Iterable<Color> allColors = colorService.getAllColors(0, 999, Sort.unsorted());
+
         Assertions.assertNotNull(allColors);
         Assertions.assertFalse(allColors.iterator().hasNext());
     }
@@ -176,11 +180,12 @@ public class ColorServiceTests {
         Color color1 = new Color(1L, "testColor1");
         Color color2 = new Color(2L, "testColor2");
         Color color3 = new Color(3L, "testColor3");
-        Iterable<Color> colorsIterable = Arrays.asList(color1, color2, color3);
+        List<Color> colorsIterable = Arrays.asList(color1, color2, color3);
+        Page<Color> page = new PageImpl<>(colorsIterable, PageRequest.of(0, 3), 3);
 
-        Mockito.when(colorRepository.findAll()).thenReturn(colorsIterable);
+        Mockito.when(colorRepository.findAll(Mockito.any(PageRequest.class))).thenReturn(page);
 
-        Iterable<Color> allColors = colorService.getAllColors();
+        Iterable<Color> allColors = colorService.getAllColors(0, 999, Sort.unsorted());
 
         Assertions.assertNotNull(allColors);
         Assertions.assertTrue(allColors.iterator().hasNext());
@@ -190,14 +195,18 @@ public class ColorServiceTests {
     @Test
     void deleteColor_whenColorIdExists_shouldDeleteColor() {
         Color color = new Color(1L, "testColor");
+
         Mockito.when(colorRepository.findById(Mockito.any())).thenReturn(Optional.of(color));
+
         colorService.deleteColor(color.getId());
+
         Mockito.verify(colorRepository, Mockito.times(1)).deleteById(color.getId());
     }
 
     @Test
     void deleteColor_whenColorIdDoesNotExist_shouldThrowIllegalArgumentException() {
         Mockito.when(colorRepository.findById(Mockito.any())).thenReturn(Optional.empty());
+
         Assertions.assertThrows(IllegalArgumentException.class, () -> colorService.deleteColor(999L));
     }
 
@@ -217,32 +226,36 @@ public class ColorServiceTests {
     }
 
     @Test
-    void updateColorName_whenColorIdDoesNotExists_shouldThrowIllegalArgumentException() {
+    void updateColor_whenColorIdDoesNotExists_shouldThrowIllegalArgumentException() {
+        Color update = new Color("testColor");
         Mockito.when(colorRepository.findById(Mockito.any())).thenReturn(Optional.empty());
 
-        Assertions.assertThrows(IllegalArgumentException.class, () -> colorService.updateColorName(999L, "newColor"));
+        Assertions.assertThrows(IllegalArgumentException.class, () -> colorService.updateColor(999L, update));
     }
 
     @Test
-    void updateColorName_whenColorIdExistsAndColorNameIsUnique_shouldReturnUpdatedColor() {
+    void updateColor_whenColorIdExistsAndUpdateNameIsUnique_shouldReturnUpdatedColor() {
         Color color = new Color(1L, "testColor");
-        Mockito.when(colorRepository.findById(Mockito.any())).thenReturn(Optional.of(color));
-        Mockito.when(colorRepository.save(Mockito.any(Color.class))).thenReturn(new Color(color.getId(), "newColor"));
+        Color update = new Color("newColor");
 
-        Color updatedColor = colorService.updateColorName(color.getId(), "newColor");
+        Mockito.when(colorRepository.findById(Mockito.any())).thenReturn(Optional.of(color));
+        Mockito.when(colorRepository.save(Mockito.any(Color.class))).thenReturn(new Color(color.getId(), update.getName()));
+
+        Color updatedColor = colorService.updateColor(color.getId(), update);
 
         Assertions.assertNotNull(updatedColor);
-        Assertions.assertEquals("newColor", updatedColor.getName());
         Assertions.assertEquals(color.getId(), updatedColor.getId());
+        Assertions.assertEquals(update.getName(), updatedColor.getName());
     }
 
     @Test
-    void updateColorName_whenColorIdExistsAndColorNameIsNotUnique_shouldThrowIllegalArgumentException() {
+    void updateColor_whenColorIdExistsAndUpdateNameIsNotUnique_shouldThrowIllegalArgumentException() {
         Color color = new Color(1L, "testColor");
+        Color update = new Color("newColor");
 
         Mockito.when(colorRepository.findById(color.getId())).thenReturn(Optional.of(color));
-        Mockito.when(colorRepository.save(new Color(1L, "newColor"))).thenThrow(new IllegalArgumentException("Color name is not unique."));
+        Mockito.when(colorRepository.save(new Color(color.getId(), update.getName()))).thenThrow(new IllegalArgumentException("Color name is not unique."));
 
-        Assertions.assertThrows(IllegalArgumentException.class, () -> colorService.updateColorName(color.getId(), "newColor"));
+        Assertions.assertThrows(IllegalArgumentException.class, () -> colorService.updateColor(color.getId(), update));
     }
 }

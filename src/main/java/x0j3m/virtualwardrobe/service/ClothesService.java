@@ -78,51 +78,20 @@ public class ClothesService {
         }
     }
 
-    public Clothes updateClothesColor(Long id, Long colorId) throws IllegalArgumentException {
-        if (id == null || colorId == null) {
+    public Clothes updateClothes(Long id, Clothes update) throws IllegalArgumentException {
+        if (id == null) {
             throw new IllegalArgumentException("Id cannot be null");
         }
-        if (id < 1 || colorId < 1) {
+        if (id < 1) {
             throw new IllegalArgumentException("Id must be greater than 0");
         }
-        try {
-            colorService.getColor(colorId);
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Color does not exist");
+        if (update == null) {
+            throw new IllegalArgumentException("Clothes cannot be null");
         }
-        if (clothesRepository.findById(id).isPresent()) {
-            Clothes updatedClothes = new Clothes(
-                    id,
-                    colorService.getColor(colorId),
-                    clothesRepository.findById(id).get().getType()
-            );
-            return clothesRepository.save(updatedClothes);
-        } else {
-            throw new IllegalArgumentException("Clothes with id " + id + " does not exist");
-        }
-    }
-
-    public Clothes updateClothesType(Long id, Long typeId) throws IllegalArgumentException {
-        if (id == null || typeId == null) {
-            throw new IllegalArgumentException("Id cannot be null");
-        }
-        if (id < 1 || typeId < 1) {
-            throw new IllegalArgumentException("Id must be greater than 0");
-        }
-        try {
-            clothesTypeService.getClothesType(typeId);
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException(e.getMessage());
-        }
-        if (clothesRepository.findById(id).isPresent()) {
-            Clothes updatedClothes = new Clothes(
-                    id,
-                    clothesRepository.findById(id).get().getColor(),
-                    clothesTypeService.getClothesType(typeId)
-            );
-            return clothesRepository.save(updatedClothes);
-        } else {
-            throw new IllegalArgumentException("Clothes with id " + id + " does not exist");
-        }
+        Clothes clothes = clothesRepository.findById(id).orElseThrow(
+                () -> new IllegalArgumentException("Clothes with id " + id + " does not exist")
+        );
+        Clothes updatedClothes = Clothes.merge(clothes, update);
+        return clothesRepository.save(updatedClothes);
     }
 }

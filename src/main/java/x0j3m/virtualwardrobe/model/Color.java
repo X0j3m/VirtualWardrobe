@@ -21,4 +21,10 @@ public class Color {
         this.id = null;
         this.name = name;
     }
+
+    public static Color merge(Color base, Color update) {
+        Long id = update.getId() == null ? base.id : update.getId();
+        String name = update.getName() == null ? base.name : update.getName();
+        return new Color(id, name);
+    }
 }

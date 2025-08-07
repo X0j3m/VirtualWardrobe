@@ -25,4 +25,11 @@ public class ClothesType {
         this.name = name;
         this.layer = layer;
     }
+
+    public static ClothesType merge(ClothesType base, ClothesType update) {
+        Long id = update.getId() == null ? base.id : update.getId();
+        String name = update.getName() == null ? base.name : update.getName();
+        ClothesLayer layer = update.getLayer() == null ? base.layer : update.getLayer();
+        return new ClothesType(id, name, layer);
+    }
 }

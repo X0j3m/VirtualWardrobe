@@ -26,4 +26,11 @@ public class Clothes {
         this.color = color;
         this.type = type;
     }
+
+    public static Clothes merge(Clothes base, Clothes update) {
+        Long id = update.getId() == null ? base.id : update.getId();
+        Color color = update.getColor() == null ? base.color : update.getColor();
+        ClothesType type = update.getType() == null ? base.type : update.getType();
+        return new Clothes(id, color, type);
+    }
 }

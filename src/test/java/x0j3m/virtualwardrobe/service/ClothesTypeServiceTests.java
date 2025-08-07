@@ -223,93 +223,90 @@ public class ClothesTypeServiceTests {
     }
 
     @Test
-    void updateClothesTypeName_whenClothesTypeNameDoesNotExists_shouldUpdateClothesType() {
+    void updateClothesType_whenIdIsNull_shouldThrowIllegalArgumentException() {
+        Assertions.assertThrows(IllegalArgumentException.class, () -> clothesTypeService.updateClothesType(null, new ClothesType()));
+    }
+
+    @Test
+    void updateClothesType_whenIdIsNegative_shouldThrowIllegalArgumentException() {
+        Assertions.assertThrows(IllegalArgumentException.class, () -> clothesTypeService.updateClothesType(-1L, new ClothesType()));
+    }
+
+    @Test
+    void updateClothesType_whenIdIsZero_shouldThrowIllegalArgumentException() {
+        Assertions.assertThrows(IllegalArgumentException.class, () -> clothesTypeService.updateClothesType(0L, new ClothesType()));
+    }
+
+    @Test
+    void updateClothesType_whenUpdateNameExists_shouldThrowIllegalArgumentException() {
         ClothesType clothesType = new ClothesType(1L, "testName", ClothesLayer.BASE_LAYER);
-        Mockito.when(clothesTypeRepository.findById(Mockito.any())).thenReturn(Optional.of(clothesType));
-        Mockito.when(clothesTypeRepository.findByName(Mockito.any())).thenReturn(Optional.empty());
-        Mockito.when(clothesTypeRepository.save(Mockito.any())).thenReturn(clothesType);
+        Mockito.when(clothesTypeRepository.findByName(Mockito.any())).thenReturn(Optional.of(clothesType));
 
-        ClothesType updatedClothesType = clothesTypeService.updateClothesTypeName(clothesType.getId(), "updatedTestName");
-
-        Assertions.assertNotNull(updatedClothesType);
-        Assertions.assertEquals(clothesType.getId(), updatedClothesType.getId());
-        Assertions.assertEquals(clothesType.getName(), updatedClothesType.getName());
-        Assertions.assertEquals(clothesType.getLayer(), updatedClothesType.getLayer());
+        ClothesType update = new ClothesType("updatedTestName", clothesType.getLayer());
+        Assertions.assertThrows(IllegalArgumentException.class, () -> clothesTypeService.updateClothesType(clothesType.getId(), update));
     }
 
     @Test
-    void updateClothesTypeName_whenClothesTypeNameExists_shouldThrowIllegalArgumentException() {
-        ClothesType clothesType = new ClothesType(1L, "testName", ClothesLayer.BASE_LAYER);
-        Mockito.when(clothesTypeRepository.findByName("updatedTestName")).thenReturn(Optional.of(clothesType));
-
-        Assertions.assertThrows(IllegalArgumentException.class, () -> clothesTypeService.updateClothesTypeName(clothesType.getId(), "updatedTestName"));
-    }
-
-    @Test
-    void updateClothesTypeName_whenClothesTypeNameIsNull_shouldThrowIllegalArgumentException() {
-        Assertions.assertThrows(IllegalArgumentException.class, () -> clothesTypeService.updateClothesTypeName(1L, null));
-    }
-
-    @Test
-    void updateClothesTypeName_whenClothesTypeNameIsEmpty_shouldThrowIllegalArgumentException() {
-        Assertions.assertThrows(IllegalArgumentException.class, () -> clothesTypeService.updateClothesTypeName(1L, ""));
-    }
-
-    @Test
-    void updateClothesTypeName_whenClothesTypeIdIsNull_shouldThrowIllegalArgumentException() {
-        Assertions.assertThrows(IllegalArgumentException.class, () -> clothesTypeService.updateClothesTypeName(null, "testName"));
-    }
-
-    @Test
-    void updateClothesTypeName_whenClothesTypeNameIsNegative_shouldThrowIllegalArgumentException() {
-        Assertions.assertThrows(IllegalArgumentException.class, () -> clothesTypeService.updateClothesTypeName(-1L, "testName"));
-    }
-
-    @Test
-    void updateClothesTypeName_whenClothesTypeNameIsZero_shouldThrowIllegalArgumentException() {
-        Assertions.assertThrows(IllegalArgumentException.class, () -> clothesTypeService.updateClothesTypeName(0L, "testName"));
-    }
-
-    @Test
-    void updateClothesTypeLayer_whenClothesTypeIdIsNull_shouldThrowIllegalArgumentException() {
-        Assertions.assertThrows(IllegalArgumentException.class, () -> clothesTypeService.updateClothesTypeLayer(null, ClothesLayer.BASE_LAYER));
-    }
-
-    @Test
-    void updateClothesTypeLayer_whenClothesTypeIdIsNegative_shouldThrowIllegalArgumentException() {
-        Assertions.assertThrows(IllegalArgumentException.class, () -> clothesTypeService.updateClothesTypeLayer(-1L, ClothesLayer.BASE_LAYER));
-    }
-
-    @Test
-    void updateClothesTypeLayer_whenClothesTypeIdIsZero_shouldThrowIllegalArgumentException() {
-        Assertions.assertThrows(IllegalArgumentException.class, () -> clothesTypeService.updateClothesTypeLayer(0L, ClothesLayer.BASE_LAYER));
-    }
-
-    @Test
-    void updateClothesTypeLayer_whenClothesTypeLayerIsNull_shouldThrowIllegalArgumentException() {
-        Assertions.assertThrows(IllegalArgumentException.class, () -> clothesTypeService.updateClothesTypeLayer(1L, null));
-    }
-
-    @Test
-    void updateClothesTypeLayer_whenClothesTypeIdExists_shouldUpdateClothesTypeLayer() {
-        ClothesType clothesType = new ClothesType(1L, "testName", ClothesLayer.BASE_LAYER);
-        ClothesType update = new ClothesType(1L, "testName", ClothesLayer.BOTTOMWEAR);
-        Mockito.when(clothesTypeRepository.findById(Mockito.any())).thenReturn(Optional.of(clothesType));
-        Mockito.when(clothesTypeRepository.save(Mockito.any())).thenReturn(update);
-
-        ClothesType updatedClothesType = clothesTypeService.updateClothesTypeLayer(clothesType.getId(), ClothesLayer.BOTTOMWEAR);
-
-        Assertions.assertNotNull(updatedClothesType);
-        Assertions.assertEquals(clothesType.getId(), updatedClothesType.getId());
-        Assertions.assertEquals(clothesType.getName(), updatedClothesType.getName());
-        Assertions.assertEquals(ClothesLayer.BOTTOMWEAR, updatedClothesType.getLayer());
-    }
-
-    @Test
-    void updateClothesTypeLayer_whenClothesTypeIdDoesNotExist_shouldThrowIllegalArgumentException() {
-        ClothesType clothesType = new ClothesType(1L, "testName", ClothesLayer.BASE_LAYER);
+    void updateClothesType_whenClothesTypeWithProvidedIdDoesNotExist_shouldThrowIllegalArgumentException() {
         Mockito.when(clothesTypeRepository.findById(Mockito.any())).thenReturn(Optional.empty());
 
-        Assertions.assertThrows(IllegalArgumentException.class, () -> clothesTypeService.updateClothesTypeLayer(clothesType.getId(), ClothesLayer.BOTTOMWEAR));
+        Assertions.assertThrows(IllegalArgumentException.class, () -> clothesTypeService.updateClothesType(999L, new ClothesType()));
+    }
+
+    @Test
+    void updateClothesType_whenUpdateIsNull_shouldThrowIllegalArgumentException() {
+        Assertions.assertThrows(IllegalArgumentException.class, () -> clothesTypeService.updateClothesType(1L, null));
+    }
+
+    @Test
+    void updateClothesType_whenUpdateContainsValidData_shouldReturnUpdatedClothesType() {
+        ClothesType clothesType = new ClothesType(1L, "testName", ClothesLayer.BASE_LAYER);
+        ClothesType update = new ClothesType("updatedTestName", ClothesLayer.BOTTOMWEAR);
+        ClothesType updated = new ClothesType(clothesType.getId(), update.getName(), update.getLayer());
+
+        Mockito.when(clothesTypeRepository.findById(Mockito.any())).thenReturn(Optional.of(clothesType));
+        Mockito.when(clothesTypeRepository.findByName(Mockito.any())).thenReturn(Optional.empty());
+        Mockito.when(clothesTypeRepository.save(Mockito.any())).thenReturn(updated);
+
+        ClothesType updatedClothesType = clothesTypeService.updateClothesType(clothesType.getId(), update);
+
+        Assertions.assertNotNull(updatedClothesType);
+        Assertions.assertEquals(clothesType.getId(), updatedClothesType.getId());
+        Assertions.assertEquals(update.getName(), updatedClothesType.getName());
+        Assertions.assertEquals(update.getLayer(), updatedClothesType.getLayer());
+    }
+
+    @Test
+    void updateClothesType_whenUpdateNameIsNull_shouldThrowIllegalArgumentException() {
+        ClothesType clothesType = new ClothesType(1L, "testName", ClothesLayer.BASE_LAYER);
+        ClothesType update = new ClothesType(null, ClothesLayer.BOTTOMWEAR);
+        ClothesType updated = new ClothesType(clothesType.getId(), clothesType.getName(), update.getLayer());
+
+        Mockito.when(clothesTypeRepository.findById(Mockito.any())).thenReturn(Optional.of(clothesType));
+        Mockito.when(clothesTypeRepository.save(Mockito.any())).thenReturn(updated);
+
+        ClothesType updatedClothesType = clothesTypeService.updateClothesType(clothesType.getId(), update);
+
+        Assertions.assertNotNull(updatedClothesType);
+        Assertions.assertEquals(clothesType.getId(), updatedClothesType.getId());
+        Assertions.assertEquals(clothesType.getName(), updatedClothesType.getName());
+        Assertions.assertEquals(update.getLayer(), updatedClothesType.getLayer());
+    }
+
+    @Test
+    void updateClothesType_whenUpdateLayerIsNull_shouldThrowIllegalArgumentException() {
+        ClothesType clothesType = new ClothesType(1L, "testName", ClothesLayer.BASE_LAYER);
+        ClothesType update = new ClothesType("updatedName", null);
+        ClothesType updated = new ClothesType(clothesType.getId(), update.getName(), clothesType.getLayer());
+
+        Mockito.when(clothesTypeRepository.findById(Mockito.any())).thenReturn(Optional.of(clothesType));
+        Mockito.when(clothesTypeRepository.save(Mockito.any())).thenReturn(updated);
+
+        ClothesType updatedClothesType = clothesTypeService.updateClothesType(clothesType.getId(), update);
+
+        Assertions.assertNotNull(updatedClothesType);
+        Assertions.assertEquals(clothesType.getId(), updatedClothesType.getId());
+        Assertions.assertEquals(update.getName(), updatedClothesType.getName());
+        Assertions.assertEquals(clothesType.getLayer(), updatedClothesType.getLayer());
     }
 }

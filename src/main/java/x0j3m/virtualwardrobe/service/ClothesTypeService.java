@@ -70,53 +70,26 @@ public class ClothesTypeService {
         }
     }
 
-    public ClothesType updateClothesTypeName(Long id, String clothesTypeName) throws IllegalArgumentException {
+    public ClothesType updateClothesType(Long id, ClothesType update) throws IllegalArgumentException {
         if (id == null) {
             throw new IllegalArgumentException("ClothesType id cannot be null");
         }
         if (id < 1) {
             throw new IllegalArgumentException("ClothesType id must be greater than 0");
         }
-        if (clothesTypeName == null) {
-            throw new IllegalArgumentException("ClothesType name cannot be null");
+        if (update == null) {
+            throw new IllegalArgumentException("ClothesType cannot be null");
         }
-        if (clothesTypeName.isEmpty()) {
-            throw new IllegalArgumentException("ClothesType name cannot be empty");
+        if (update.getName() != null) {
+            String updateName = update.getName();
+            if (clothesTypeRepository.findByName(updateName).isPresent()) {
+                throw new IllegalArgumentException("ClothesType named " + updateName + " already exists");
+            }
         }
-        if (clothesTypeRepository.findByName(clothesTypeName).isPresent()) {
-            throw new IllegalArgumentException("ClothesType named " + clothesTypeName + " already exists");
-        }
-        if (clothesTypeRepository.findById(id).isPresent()) {
-            ClothesType updated = new ClothesType(
-                    id,
-                    clothesTypeName,
-                    clothesTypeRepository.findById(id).get().getLayer()
-            );
-            return clothesTypeRepository.save(updated);
-        } else {
-            throw new IllegalArgumentException("ClothesType with id " + id + " does not exist");
-        }
-    }
-
-    public ClothesType updateClothesTypeLayer(Long id, ClothesLayer clothesTypeLayer) throws IllegalArgumentException {
-        if (id == null) {
-            throw new IllegalArgumentException("ClothesType id cannot be null");
-        }
-        if (id < 1) {
-            throw new IllegalArgumentException("ClothesType id must be greater than 0");
-        }
-        if (clothesTypeLayer == null) {
-            throw new IllegalArgumentException("ClothesType layer cannot be null");
-        }
-        if (clothesTypeRepository.findById(id).isPresent()) {
-            ClothesType updated = new ClothesType(
-                    id,
-                    clothesTypeRepository.findById(id).get().getName(),
-                    clothesTypeLayer
-            );
-            return clothesTypeRepository.save(updated);
-        } else {
-            throw new IllegalArgumentException("ClothesType with id " + id + " does not exist");
-        }
+        ClothesType clothesType = clothesTypeRepository.findById(id).orElseThrow(
+                () -> new IllegalArgumentException("ClothesType with id " + id + " does not exist")
+        );
+        ClothesType updatedClothesType = ClothesType.merge(clothesType, update);
+        return clothesTypeRepository.save(updatedClothesType);
     }
 }
