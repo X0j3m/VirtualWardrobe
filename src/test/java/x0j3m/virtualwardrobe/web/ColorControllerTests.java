@@ -117,7 +117,7 @@ public class ColorControllerTests {
     }
 
     @Test
-    void saveColor_whenColorNameExists_shouldReturnNotFoundStatus() throws Exception {
+    void saveColor_whenColorNameExists_shouldReturnBadRequestStatus() throws Exception {
         Mockito.when(colorService.saveColor(Mockito.any(Color.class))).thenThrow(new IllegalArgumentException());
 
         ResultActions response = mockMvc.perform(MockMvcRequestBuilders
@@ -127,7 +127,7 @@ public class ColorControllerTests {
                 .contentType(MediaType.APPLICATION_JSON)
         );
 
-        response.andExpect(MockMvcResultMatchers.status().isNotFound());
+        response.andExpect(MockMvcResultMatchers.status().isBadRequest());
     }
 
     @Test
@@ -145,7 +145,7 @@ public class ColorControllerTests {
     }
 
     @Test
-    void saveColor_whenColorNameIsEmpty_shouldReturnNotFoundStatus() throws Exception {
+    void saveColor_whenColorNameIsEmpty_shouldReturnBadRequestStatus() throws Exception {
         Mockito.when(colorService.saveColor(Mockito.any(Color.class))).thenThrow(new IllegalArgumentException());
 
         ResultActions response = mockMvc.perform(MockMvcRequestBuilders
@@ -155,7 +155,7 @@ public class ColorControllerTests {
                 .contentType(MediaType.APPLICATION_JSON)
         );
 
-        response.andExpect(MockMvcResultMatchers.status().isNotFound());
+        response.andExpect(MockMvcResultMatchers.status().isBadRequest());
     }
 
     @Test

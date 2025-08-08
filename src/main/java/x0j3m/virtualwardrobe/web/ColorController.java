@@ -50,7 +50,7 @@ public class ColorController {
             URI location = URI.create("/colors/" + savedId);
             return ResponseEntity.created(location).build();
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.badRequest().build();
         }
     }
 
