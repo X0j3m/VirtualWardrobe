@@ -7,13 +7,16 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import x0j3m.virtualwardrobe.data.ClothesTypeRepository;
 import x0j3m.virtualwardrobe.model.ClothesType;
 import x0j3m.virtualwardrobe.model.ClothesLayer;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.StreamSupport;
 
 @ExtendWith(MockitoExtension.class)
 public class ClothesTypeServiceTests {
@@ -170,8 +173,8 @@ public class ClothesTypeServiceTests {
 
     @Test
     void getAllClothesTypes_whenTableIsEmpty_shouldReturnEmpty() {
-        Mockito.when(clothesTypeRepository.findAll()).thenReturn(Collections.emptyList());
-        Iterable<ClothesType> allClothesTypes = clothesTypeService.getAllClothesTypes();
+        Mockito.when(clothesTypeRepository.findAll(Mockito.any(PageRequest.class))).thenReturn(new PageImpl<>(Collections.emptyList()));
+        Iterable<ClothesType> allClothesTypes = clothesTypeService.getAllClothesTypes(0, 999, Sort.unsorted());
 
         Assertions.assertNotNull(allClothesTypes);
         Assertions.assertFalse(allClothesTypes.iterator().hasNext());
@@ -179,15 +182,19 @@ public class ClothesTypeServiceTests {
 
     @Test
     void getAllClothesTypes_whenTableIsNotEmpty_shouldReturnAllClothesTypes() {
-        ClothesType clothesType1 = new ClothesType("testName1", ClothesLayer.BASE_LAYER);
-        ClothesType clothesType2 = new ClothesType("testName2", ClothesLayer.BOTTOMWEAR);
-        ClothesType clothesType3 = new ClothesType("testName3", ClothesLayer.ACCESSORY);
-        Mockito.when(clothesTypeRepository.findAll()).thenReturn(List.of(clothesType1, clothesType2, clothesType3));
+        ClothesType clothesType1 = new ClothesType(1L, "testName1", ClothesLayer.BASE_LAYER);
+        ClothesType clothesType2 = new ClothesType(2L, "testName2", ClothesLayer.BOTTOMWEAR);
+        ClothesType clothesType3 = new ClothesType(3L, "testName3", ClothesLayer.ACCESSORY);
+        List<ClothesType> clothesTypeIterable = Arrays.asList(clothesType1, clothesType2, clothesType3);
+        Page<ClothesType> page = new PageImpl<>(clothesTypeIterable, PageRequest.of(0, 3), 3);
 
-        Iterable<ClothesType> allClothesTypes = clothesTypeService.getAllClothesTypes();
+        Mockito.when(clothesTypeRepository.findAll(Mockito.any(PageRequest.class))).thenReturn(page);
+
+        Iterable<ClothesType> allClothesTypes = clothesTypeService.getAllClothesTypes(0, 999, Sort.unsorted());
 
         Assertions.assertNotNull(allClothesTypes);
-        Assertions.assertEquals(3, allClothesTypes.spliterator().getExactSizeIfKnown());
+        Assertions.assertTrue(allClothesTypes.iterator().hasNext());
+        Assertions.assertEquals(3, StreamSupport.stream(allClothesTypes.spliterator(), false).count());
     }
 
     @Test

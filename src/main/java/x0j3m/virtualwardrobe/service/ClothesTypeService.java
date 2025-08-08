@@ -1,5 +1,7 @@
 package x0j3m.virtualwardrobe.service;
 
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import x0j3m.virtualwardrobe.data.ClothesTypeRepository;
 import x0j3m.virtualwardrobe.model.ClothesLayer;
@@ -52,8 +54,8 @@ public class ClothesTypeService {
         return clothesTypeRepository.findByName(clothesTypeName).orElse(null);
     }
 
-    public Iterable<ClothesType> getAllClothesTypes() {
-        return clothesTypeRepository.findAll();
+    public Iterable<ClothesType> getAllClothesTypes(int page, int size, Sort sort) {
+        return clothesTypeRepository.findAll(PageRequest.of(page, size, sort));
     }
 
     public void deleteClothesType(Long id) throws IllegalArgumentException {
