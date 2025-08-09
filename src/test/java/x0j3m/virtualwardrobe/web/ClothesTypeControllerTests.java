@@ -18,6 +18,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import x0j3m.virtualwardrobe.model.ClothesLayer;
 import x0j3m.virtualwardrobe.model.ClothesType;
+import x0j3m.virtualwardrobe.model.Color;
 import x0j3m.virtualwardrobe.service.ClothesTypeService;
 
 import java.util.List;
@@ -265,5 +266,91 @@ public class ClothesTypeControllerTests {
         );
 
         response.andExpect(MockMvcResultMatchers.status().isMethodNotAllowed());
+    }
+
+    @Test
+    void updateClothesType_whenClothesTypeIdExists_shouldReturnCreatedStatus() throws Exception {
+        ClothesType update = new ClothesType("updatedName", ClothesLayer.MID_LAYER);
+        ClothesType clothesType = new ClothesType(1L, "testName", ClothesLayer.BASE_LAYER);
+        ClothesType updated = new ClothesType(1L, "updatedName", ClothesLayer.MID_LAYER);
+
+        Mockito.when(clothesTypeService.getClothesType(Mockito.anyLong())).thenReturn(clothesType);
+        Mockito.when(clothesTypeService.updateClothesType(Mockito.anyLong(), Mockito.any())).thenReturn(updated);
+
+        ResultActions response = mockMvc.perform(MockMvcRequestBuilders
+                .patch("/clothes-types/1")
+                .accept(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(update))
+                .contentType(MediaType.APPLICATION_JSON)
+        );
+
+        response.andExpect(MockMvcResultMatchers.status().isCreated())
+                .andExpect(MockMvcResultMatchers.header().string("Location", "/clothes-types/1"));
+    }
+
+    @Test
+    void updateClothesType_whenClothesTypeDoesNotExist_shouldReturnNotFoundStatus() throws Exception {
+        ClothesType update = new ClothesType("updatedName", ClothesLayer.MID_LAYER);
+        Mockito.when(clothesTypeService.getClothesType(Mockito.anyLong())).thenReturn(null);
+
+        ResultActions response = mockMvc.perform(MockMvcRequestBuilders
+                .patch("/clothes-types/1")
+                .accept(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(update))
+                .contentType(MediaType.APPLICATION_JSON)
+        );
+
+        response.andExpect(MockMvcResultMatchers.status().isNotFound());
+    }
+
+    @Test
+    void updateClothesType_whenUpdateNameIsNull_shouldReturnCreatedStatus() throws Exception {
+        ClothesType update = new ClothesType(null, ClothesLayer.MID_LAYER);
+        ClothesType clothesType = new ClothesType(1L, "testName", ClothesLayer.BASE_LAYER);
+        ClothesType updated = new ClothesType(1L, clothesType.getName(), update.getLayer());
+        Mockito.when(clothesTypeService.getClothesType(Mockito.anyLong())).thenReturn(clothesType);
+        Mockito.when(clothesTypeService.updateClothesType(Mockito.anyLong(), Mockito.any())).thenReturn(updated);
+
+        ResultActions response = mockMvc.perform(MockMvcRequestBuilders
+                .patch("/clothes-types/1")
+                .accept(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(update))
+                .contentType(MediaType.APPLICATION_JSON)
+        );
+
+        response.andExpect(MockMvcResultMatchers.status().isCreated())
+                .andExpect(MockMvcResultMatchers.header().string("Location", "/clothes-types/1"));
+    }
+
+    @Test
+    void updateClothesType_whenUpdateLayerIsNull_shouldReturnCreatedStatus() throws Exception {
+        ClothesType update = new ClothesType("updatedName", null);
+        ClothesType clothesType = new ClothesType(1L, "testName", ClothesLayer.BASE_LAYER);
+        ClothesType updated = new ClothesType(1L, update.getName(), clothesType.getLayer());
+
+        Mockito.when(clothesTypeService.getClothesType(Mockito.anyLong())).thenReturn(clothesType);
+        Mockito.when(clothesTypeService.updateClothesType(Mockito.anyLong(), Mockito.any())).thenReturn(updated);
+
+        ResultActions response = mockMvc.perform(MockMvcRequestBuilders
+                .patch("/clothes-types/1")
+                .accept(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(update))
+                .contentType(MediaType.APPLICATION_JSON)
+        );
+
+        response.andExpect(MockMvcResultMatchers.status().isCreated())
+                .andExpect(MockMvcResultMatchers.header().string("Location", "/clothes-types/1"));
+    }
+
+    @Test
+    void updateClothesType_whenPathVariableIsNotValid_shouldReturnBadRequestStatus() throws Exception {
+        ResultActions response = mockMvc.perform(MockMvcRequestBuilders
+                .patch("/clothes-types/not_valid")
+                .accept(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(new ClothesType(null, null)))
+                .contentType(MediaType.APPLICATION_JSON)
+        );
+
+        response.andExpect(MockMvcResultMatchers.status().isBadRequest());
     }
 }
