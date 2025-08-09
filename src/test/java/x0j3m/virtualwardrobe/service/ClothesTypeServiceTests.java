@@ -284,7 +284,7 @@ public class ClothesTypeServiceTests {
     }
 
     @Test
-    void updateClothesType_whenUpdateNameIsNull_shouldThrowIllegalArgumentException() {
+    void updateClothesType_whenUpdateNameIsNull_shouldReturnUpdatedClothesType() {
         ClothesType clothesType = new ClothesType(1L, "testName", ClothesLayer.BASE_LAYER);
         ClothesType update = new ClothesType(null, ClothesLayer.BOTTOMWEAR);
         ClothesType updated = new ClothesType(clothesType.getId(), clothesType.getName(), update.getLayer());
@@ -301,7 +301,7 @@ public class ClothesTypeServiceTests {
     }
 
     @Test
-    void updateClothesType_whenUpdateLayerIsNull_shouldThrowIllegalArgumentException() {
+    void updateClothesType_whenUpdateLayerIsNull_shouldReturnUpdatedClothesType() {
         ClothesType clothesType = new ClothesType(1L, "testName", ClothesLayer.BASE_LAYER);
         ClothesType update = new ClothesType("updatedName", null);
         ClothesType updated = new ClothesType(clothesType.getId(), update.getName(), clothesType.getLayer());
