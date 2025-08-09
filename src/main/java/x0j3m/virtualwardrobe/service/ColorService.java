@@ -24,9 +24,12 @@ public class ColorService {
         if (colorRepository.findByName(color.getName()).isPresent()) {
             throw new IllegalArgumentException("Color already exists");
         }
-
-        Color savedColor = colorRepository.save(color);
-        return savedColor.getId();
+        try{
+            Color savedColor = colorRepository.save(color);
+            return savedColor.getId();
+        }catch (Exception e) {
+            throw new IllegalArgumentException(e.getMessage());
+        }
     }
 
     public Long saveColor(String colorName) throws IllegalArgumentException {
