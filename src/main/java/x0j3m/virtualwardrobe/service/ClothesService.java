@@ -1,5 +1,7 @@
 package x0j3m.virtualwardrobe.service;
 
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import x0j3m.virtualwardrobe.data.ClothesRepository;
 import x0j3m.virtualwardrobe.model.Clothes;
@@ -46,8 +48,8 @@ public class ClothesService {
         return clothesRepository.findById(id).orElse(null);
     }
 
-    public Iterable<Clothes> getAllClothes() {
-        return clothesRepository.findAll();
+    public Iterable<Clothes> getAllClothes(int page, int size, Sort sort) {
+        return clothesRepository.findAll(PageRequest.of(page, size, sort));
     }
 
     public Iterable<Clothes> getClothesByColor(String colorName) {

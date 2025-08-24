@@ -7,6 +7,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import x0j3m.virtualwardrobe.data.ClothesRepository;
 import x0j3m.virtualwardrobe.model.Clothes;
 import x0j3m.virtualwardrobe.model.ClothesLayer;
@@ -17,6 +21,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.StreamSupport;
 
 @ExtendWith(MockitoExtension.class)
 public class ClothesServiceTests {
@@ -124,8 +129,8 @@ public class ClothesServiceTests {
 
     @Test
     void getAllClothes_whenTableIsEmpty_shouldReturnEmpty() {
-        Mockito.when(clothesRepository.findAll()).thenReturn(java.util.Collections.emptyList());
-        Iterable<Clothes> allClothes = clothesService.getAllClothes();
+        Mockito.when(clothesRepository.findAll(Mockito.any(PageRequest.class))).thenReturn(new PageImpl<>(Collections.emptyList()));
+        Iterable<Clothes> allClothes = clothesService.getAllClothes(0, 999, Sort.unsorted());
         Assertions.assertNotNull(allClothes);
         Assertions.assertFalse(allClothes.iterator().hasNext());
     }
@@ -143,15 +148,15 @@ public class ClothesServiceTests {
         Clothes clothes2 = new Clothes(2L, color2, type2);
         Clothes clothes3 = new Clothes(3L, color3, type3);
 
-        Iterable<Clothes> clothesIterable = Arrays.asList(clothes1, clothes2, clothes3);
+        List<Clothes> clothesIterable = Arrays.asList(clothes1, clothes2, clothes3);
+        Page<Clothes> page = new PageImpl<>(clothesIterable, PageRequest.of(0, 3), 3);
+        Mockito.when(clothesRepository.findAll(Mockito.any(PageRequest.class))).thenReturn(page);
 
-        Mockito.when(clothesRepository.findAll()).thenReturn(clothesIterable);
-
-        Iterable<Clothes> allClothes = clothesService.getAllClothes();
+        Iterable<Clothes> allClothes = clothesService.getAllClothes(0, 999, Sort.unsorted());
 
         Assertions.assertNotNull(allClothes);
         Assertions.assertTrue(allClothes.iterator().hasNext());
-        Assertions.assertEquals(3, allClothes.spliterator().getExactSizeIfKnown());
+        Assertions.assertEquals(3, StreamSupport.stream(allClothes.spliterator(), false).count());
     }
 
     @Test
@@ -273,28 +278,28 @@ public class ClothesServiceTests {
 
     @Test
     void updateClothes_whenClothesIdIsNull_shouldThrowIllegalArgumentException() {
-        Assertions.assertThrows(IllegalArgumentException.class, ()->clothesService.updateClothes(null, new Clothes()));
+        Assertions.assertThrows(IllegalArgumentException.class, () -> clothesService.updateClothes(null, new Clothes()));
     }
 
     @Test
     void updateClothes_whenClothesIdIsNegative_shouldThrowIllegalArgumentException() {
-        Assertions.assertThrows(IllegalArgumentException.class, ()->clothesService.updateClothes(-1L, new Clothes()));
+        Assertions.assertThrows(IllegalArgumentException.class, () -> clothesService.updateClothes(-1L, new Clothes()));
     }
 
     @Test
     void updateClothes_whenClothesIdIsZero_shouldThrowIllegalArgumentException() {
-        Assertions.assertThrows(IllegalArgumentException.class, ()->clothesService.updateClothes(0L, new Clothes()));
+        Assertions.assertThrows(IllegalArgumentException.class, () -> clothesService.updateClothes(0L, new Clothes()));
     }
 
     @Test
     void updateClothes_whenUpdateIsNull_shouldThrowIllegalArgumentException() {
-        Assertions.assertThrows(IllegalArgumentException.class, ()->clothesService.updateClothes(1L, null));
+        Assertions.assertThrows(IllegalArgumentException.class, () -> clothesService.updateClothes(1L, null));
     }
 
     @Test
     void updateClothes_whenClothesWithProvidedIdDoesNotExist_shouldThrowIllegalArgumentException() {
         Mockito.when(clothesRepository.findById(Mockito.any())).thenReturn(Optional.empty());
-        Assertions.assertThrows(IllegalArgumentException.class, ()->clothesService.updateClothes(999L, new Clothes()));
+        Assertions.assertThrows(IllegalArgumentException.class, () -> clothesService.updateClothes(999L, new Clothes()));
     }
 
     @Test
