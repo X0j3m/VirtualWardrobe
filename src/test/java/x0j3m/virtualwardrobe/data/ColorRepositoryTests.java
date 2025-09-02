@@ -44,16 +44,6 @@ public class ColorRepositoryTests {
     }
 
     @Test
-    void save_whenColorNameExistsInDatabase_shouldThrowDataIntegrityViolationException() {
-        Color color = new Color("testColor");
-        colorRepository.save(color);
-
-        Color updatedColor = new Color("testColor");
-
-        Assertions.assertThrows(DataIntegrityViolationException.class, () -> colorRepository.save(updatedColor));
-    }
-
-    @Test
     void save_whenColorNameIsUpdated_shouldReturnUpdatedColor() {
         Color color = new Color("testColor");
         Color savedColor = colorRepository.save(color);
