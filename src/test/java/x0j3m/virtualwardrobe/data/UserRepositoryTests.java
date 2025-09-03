@@ -10,8 +10,6 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.dao.DataIntegrityViolationException;
 import x0j3m.virtualwardrobe.model.User;
 
-import java.util.Optional;
-
 @DataJpaTest
 @AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2)
 public class UserRepositoryTests {
@@ -25,7 +23,7 @@ public class UserRepositoryTests {
 
     @Test
     void save_whenUserDoesNotExistsInDatabase_shouldReturnSavedUser() {
-        User user = new User("username", "password", "firstName", "lastName", "email");
+        User user = new User("username", "password", "firstName", "lastName", "email@email.com");
 
         User saved = userRepository.save(user);
 
@@ -41,18 +39,18 @@ public class UserRepositoryTests {
 
     @Test
     void save_whenUserExistsInDatabase_shouldThrowDataIntegrityViolationException() {
-        User user = new User("username", "password", "firstName", "lastName", "email");
+        User user = new User("username", "password", "firstName", "lastName", "email@email.com");
 
         userRepository.save(user);
 
-        User newUser = new User("username", "password1", "firstName1", "lastName1", "email1");
+        User newUser = new User("username", "password1", "firstName1", "lastName1", "email1@email.com");
 
         Assertions.assertThrows(DataIntegrityViolationException.class, () -> userRepository.save(newUser));
     }
 
     @Test
     void save_whenAnyFieldIsUpdated_shouldReturnUpdatedUser() {
-        User user = new User("username", "password", "firstName", "lastName", "email");
+        User user = new User("username", "password", "firstName", "lastName", "email@email.com");
 
         User saved = userRepository.save(user);
 
@@ -107,9 +105,9 @@ public class UserRepositoryTests {
 
     @Test
     void findAll_whenTableIsNotEmpty_shouldReturnAllSavedUsers() {
-        User user1 = new User("username1", "password1", "firstName1", "lastName1", "email1");
-        User user2 = new User("username2", "password2", "firstName2", "lastName2", "email2");
-        User user3 = new User("username3", "password3", "firstName3", "lastName3", "email3");
+        User user1 = new User("username1", "password1", "firstName1", "lastName1", "email1@email.com");
+        User user2 = new User("username2", "password2", "firstName2", "lastName2", "email2@email.com");
+        User user3 = new User("username3", "password3", "firstName3", "lastName3", "email3@email.com");
         userRepository.save(user1);
         userRepository.save(user2);
         userRepository.save(user3);
@@ -121,8 +119,8 @@ public class UserRepositoryTests {
     }
 
     @Test
-    void findById_whenUserExists_shouldReturnUser(){
-        User user = new User("username", "password", "firstName", "lastName", "email");
+    void findById_whenUserExists_shouldReturnUser() {
+        User user = new User("username", "password", "firstName", "lastName", "email@email.com");
         User saved = userRepository.save(user);
 
         long id = saved.getId();
@@ -147,12 +145,12 @@ public class UserRepositoryTests {
 
     @Test
     void findByUsername_whenUsernameExists_shouldReturnUser() {
-        User user = new User("username", "password", "firstName", "lastName", "email");
+        User user = new User("username", "password", "firstName", "lastName", "email@email.com");
         User saved = userRepository.save(user);
 
         String username = saved.getUsername();
 
-        User found = userRepository.findByUsername(username);
+        User found = userRepository.findByUsername(username).orElse(null);
 
         Assertions.assertNotNull(found);
         Assertions.assertNotNull(found.getId());
@@ -166,15 +164,39 @@ public class UserRepositoryTests {
 
     @Test
     void findByUsername_whenUsernameDoesNotExists_shouldReturnNull() {
-        User found = userRepository.findByUsername("notExistingUsername");
+        User found = userRepository.findByUsername("notExistingUsername").orElse(null);
+        Assertions.assertNull(found);
+    }
+
+    @Test
+    void findByEmail_whenEmailExists_shouldReturnUser() {
+        User user = new User("username", "password", "firstName", "lastName", "email@email.com");
+        User saved = userRepository.save(user);
+
+        String email = saved.getEmail();
+        User found = userRepository.findByEmail(email).orElse(null);
+
+        Assertions.assertNotNull(found);
+        Assertions.assertNotNull(found.getId());
+        Assertions.assertTrue(found.getId() > 0);
+        Assertions.assertEquals(user.getUsername(), found.getUsername());
+        Assertions.assertEquals(user.getPassword(), found.getPassword());
+        Assertions.assertEquals(user.getFirstName(), found.getFirstName());
+        Assertions.assertEquals(user.getLastName(), found.getLastName());
+        Assertions.assertEquals(user.getEmail(), found.getEmail());
+    }
+
+    @Test
+    void findByEmail_whenEmailDoesNotExists_shouldReturnNull() {
+        User found = userRepository.findByEmail("notExistingEmail").orElse(null);
         Assertions.assertNull(found);
     }
 
     @Test
     void deleteAll_whenTableIsNotEmpty_shouldDeleteAllUsers() {
-        User user1 = new User("username1", "password1", "firstName1", "lastName1", "email1");
-        User user2 = new User("username2", "password2", "firstName2", "lastName2", "email2");
-        User user3 = new User("username3", "password3", "firstName3", "lastName3", "email3");
+        User user1 = new User("username1", "password1", "firstName1", "lastName1", "email1@email.com");
+        User user2 = new User("username2", "password2", "firstName2", "lastName2", "email2@email.com");
+        User user3 = new User("username3", "password3", "firstName3", "lastName3", "email3@email.com");
         userRepository.save(user1);
         userRepository.save(user2);
         userRepository.save(user3);
@@ -194,7 +216,7 @@ public class UserRepositoryTests {
 
     @Test
     void deleteById_whenUserExists_shouldDeleteUser() {
-        User user1 = new User("username1", "password1", "firstName1", "lastName1", "email1");
+        User user1 = new User("username1", "password1", "firstName1", "lastName1", "email1@email.com");
         User saved = userRepository.save(user1);
 
         long id = saved.getId();
