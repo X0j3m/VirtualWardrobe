@@ -4,6 +4,7 @@ import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import x0j3m.virtualwardrobe.data.UserRepository;
 import x0j3m.virtualwardrobe.model.User;
@@ -13,17 +14,25 @@ import java.util.Set;
 @Service
 public class UserService {
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
     private final ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
     private final Validator validator = factory.getValidator();
 
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
+
+    private void encodePassword(User user) {
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
     }
 
     public Long saveUser(User user) throws IllegalArgumentException {
         if (user == null) {
             throw new IllegalArgumentException("User cannot be null");
         }
+
+        encodePassword(user);
 
         Set<ConstraintViolation<User>> violations = validator.validate(user);
         if (violations.isEmpty()) {
@@ -81,6 +90,9 @@ public class UserService {
         if (update == null) {
             throw new IllegalArgumentException("User cannot be null");
         }
+
+        encodePassword(update);
+
         User user = userRepository.findById(id).orElseThrow(
                 () -> new IllegalArgumentException("User id " + id + " does not exist")
         );
