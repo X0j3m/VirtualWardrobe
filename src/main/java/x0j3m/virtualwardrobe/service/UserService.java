@@ -4,11 +4,13 @@ import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
+import org.springframework.stereotype.Service;
 import x0j3m.virtualwardrobe.data.UserRepository;
 import x0j3m.virtualwardrobe.model.User;
 
 import java.util.Set;
 
+@Service
 public class UserService {
     private final UserRepository userRepository;
     private final ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
