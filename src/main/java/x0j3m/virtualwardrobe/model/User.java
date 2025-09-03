@@ -53,8 +53,8 @@ public class User {
     @Email(message = "Email must be correctly formatted")
     @Column(name = "email", nullable = false, unique = true)
     private String email;
-
-    private Collection<? extends GrantedAuthority> authorities;
+    @Column(name = "role", nullable = false)
+    private Role role;
 
     public User(String username, String password, String firstName, String lastName, String email) {
         this.username = username;
@@ -62,7 +62,7 @@ public class User {
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
-        this.authorities = Collections.singleton(new SimpleGrantedAuthority("ROLE_USER"));
+        this.role = Role.USER;
     }
 
     public User(Long id, String username, String password, String firstName, String lastName, String email) {
@@ -72,16 +72,15 @@ public class User {
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
-        this.authorities = Collections.singleton(new SimpleGrantedAuthority("ROLE_USER"));
+        this.role = Role.USER;
     }
 
     public static User merge(User base, User update) {
-        Long id = update.getId() == null ? base.getId() : update.getId();
         String username = update.getUsername() == null ? base.getUsername() : update.getUsername();
         String password = update.getPassword() == null ? base.getPassword() : update.getPassword();
         String firstName = update.getFirstName() == null ? base.getFirstName() : update.getFirstName();
         String lastName = update.getLastName() == null ? base.getLastName() : update.getLastName();
         String email = update.getEmail() == null ? base.getEmail() : update.getEmail();
-        return new User(id, username, password, firstName, lastName, email, base.getAuthorities());
+        return new User(base.getId(), username, password, firstName, lastName, email, base.getRole());
     }
 }
