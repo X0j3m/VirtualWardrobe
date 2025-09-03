@@ -258,4 +258,24 @@ public class ColorServiceTests {
 
         Assertions.assertThrows(IllegalArgumentException.class, () -> colorService.updateColor(color.getId(), update));
     }
+
+    @Test
+    void updateColor_whenColorIdIsNull_shouldThrowIllegalArgumentException() {
+        Assertions.assertThrows(IllegalArgumentException.class, () -> colorService.updateColor(null, new Color()));
+    }
+
+    @Test
+    void updateColor_whenColorIdIsZero_shouldThrowIllegalArgumentException() {
+        Assertions.assertThrows(IllegalArgumentException.class, () -> colorService.updateColor(0L, new Color()));
+    }
+
+    @Test
+    void updateColor_whenColorIdIsNegative_shouldThrowIllegalArgumentException() {
+        Assertions.assertThrows(IllegalArgumentException.class, () -> colorService.updateColor(-1L, new Color()));
+    }
+
+    @Test
+    void updateColor_whenUpdateIsNull_shouldThrowIllegalArgumentException() {
+        Assertions.assertThrows(IllegalArgumentException.class, () -> colorService.updateColor(1L, null));
+    }
 }
