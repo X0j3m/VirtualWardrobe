@@ -15,16 +15,19 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import x0j3m.virtualwardrobe.service.UserDetailsServiceImpl;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
     private final UserDetailsServiceImpl userDetailsService;
+    private final JwtFilter jwtFilter;
     private final int strength;
 
-    public SecurityConfig(UserDetailsServiceImpl userDetailsService, @Value("${security.bcrypt.strength}") int strength) {
+    public SecurityConfig(UserDetailsServiceImpl userDetailsService, JwtFilter jwtFilter, @Value("${security.bcrypt.strength}") int strength) {
         this.userDetailsService = userDetailsService;
+        this.jwtFilter = jwtFilter;
         this.strength = strength;
     }
 
@@ -38,6 +41,7 @@ public class SecurityConfig {
                 .httpBasic(Customizer.withDefaults())
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
 
