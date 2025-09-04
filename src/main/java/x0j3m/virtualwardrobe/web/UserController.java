@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 import x0j3m.virtualwardrobe.model.Role;
 import x0j3m.virtualwardrobe.model.User;
 import x0j3m.virtualwardrobe.service.UserService;
+import x0j3m.virtualwardrobe.web.dto.LoginDTO;
 import x0j3m.virtualwardrobe.web.dto.UserRequestDTO;
 
 import java.net.URI;
@@ -24,9 +25,6 @@ public class UserController {
     public ResponseEntity<UserRequestDTO> getUserInfo(@AuthenticationPrincipal UserDetails userDetails) {
         try {
             String username = userDetails.getUsername();
-            if (username == null) {
-                throw new NullPointerException("Username is null");
-            }
             User user = userService.getUser(username);
             if (user == null) {
                 return ResponseEntity.notFound().build();
@@ -57,13 +55,24 @@ public class UserController {
         }
     }
 
+    @PostMapping("/login")
+    public ResponseEntity<String> loginUser(@RequestBody LoginDTO dto) {
+        try {
+            String jwtToken = userService.verify(dto);
+            if (jwtToken == null) {
+                return ResponseEntity.badRequest().build();
+            }
+            return ResponseEntity.ok(jwtToken);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+
+    }
+
     @DeleteMapping
     public ResponseEntity<Void> deleteUser(@AuthenticationPrincipal UserDetails userDetails) {
         try {
             String username = userDetails.getUsername();
-            if (username == null) {
-                throw new NullPointerException("Username is null");
-            }
             User user = userService.getUser(username);
             if (user == null) {
                 return ResponseEntity.notFound().build();
@@ -79,9 +88,6 @@ public class UserController {
     public ResponseEntity<Void> updateUser(@AuthenticationPrincipal UserDetails userDetails, @RequestBody User update) {
         try {
             String username = userDetails.getUsername();
-            if (username == null) {
-                throw new NullPointerException("Username is null");
-            }
             User user = userService.getUser(username);
             if (user == null) {
                 return ResponseEntity.notFound().build();
