@@ -1,5 +1,6 @@
 package x0j3m.virtualwardrobe.web;
 
+import io.jsonwebtoken.Jwts;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -44,12 +45,20 @@ public class UserController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<Void> registerUser(@RequestBody User user) {
+    public ResponseEntity<String> registerUser(@RequestBody User user) {
         try {
+            LoginDTO dto = new LoginDTO(user.getUsername(), user.getPassword());
             user.setRole(Role.USER);
+
             long id = userService.saveUser(user);
+
+            String jwtToken = userService.verify(dto);
+            if (jwtToken == null) {
+                return ResponseEntity.badRequest().build();
+            }
+
             URI location = URI.create("/user/" + id);
-            return ResponseEntity.created(location).build();
+            return ResponseEntity.created(location).body(jwtToken);
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
