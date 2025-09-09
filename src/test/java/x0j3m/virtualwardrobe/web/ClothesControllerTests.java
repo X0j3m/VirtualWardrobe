@@ -18,6 +18,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import x0j3m.virtualwardrobe.config.JwtFilter;
 import x0j3m.virtualwardrobe.web.dto.ClothesRequestDTO;
 import x0j3m.virtualwardrobe.model.Clothes;
 import x0j3m.virtualwardrobe.model.ClothesLayer;
@@ -51,6 +52,9 @@ public class ClothesControllerTests {
         ColorController colorController() {
             return Mockito.mock(ColorController.class);
         }
+
+        @Bean
+        JwtFilter jwtFilter() {return Mockito.mock(JwtFilter.class);}
     }
 
     @Autowired

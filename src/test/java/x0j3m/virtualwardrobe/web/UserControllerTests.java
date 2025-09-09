@@ -16,6 +16,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import x0j3m.virtualwardrobe.config.JwtFilter;
 import x0j3m.virtualwardrobe.model.Role;
 import x0j3m.virtualwardrobe.model.User;
 import x0j3m.virtualwardrobe.service.UserService;
@@ -34,6 +35,8 @@ public class UserControllerTests {
         UserService userService() {
             return Mockito.mock(UserService.class);
         }
+        @Bean
+        JwtFilter jwtFilter() {return Mockito.mock(JwtFilter.class);}
     }
 
     @Autowired

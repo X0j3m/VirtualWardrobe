@@ -15,6 +15,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import x0j3m.virtualwardrobe.config.JwtFilter;
 import x0j3m.virtualwardrobe.model.Color;
 import x0j3m.virtualwardrobe.service.ColorService;
 
@@ -34,6 +35,8 @@ public class ColorControllerTests {
         ColorService colorService() {
             return Mockito.mock(ColorService.class);
         }
+        @Bean
+        JwtFilter jwtFilter() {return Mockito.mock(JwtFilter.class);}
     }
 
     @Autowired
