@@ -15,14 +15,18 @@ public class Clothes {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private final Long id;
     @ManyToOne
+    @JoinColumn(name = "owner_id")
+    private final User owner;
+    @ManyToOne
     @JoinColumn(name = "color_id")
     private final Color color;
     @ManyToOne(targetEntity = ClothesType.class)
     @JoinColumn(name = "type_id")
     private final ClothesType type;
 
-    public Clothes(Color color, ClothesType type) {
+    public Clothes(User owner, Color color, ClothesType type) {
         this.id = null;
+        this.owner = owner;
         this.color = color;
         this.type = type;
     }
@@ -31,6 +35,6 @@ public class Clothes {
         Long id = update.getId() == null ? base.id : update.getId();
         Color color = update.getColor() == null ? base.color : update.getColor();
         ClothesType type = update.getType() == null ? base.type : update.getType();
-        return new Clothes(id, color, type);
+        return new Clothes(id, base.getOwner(), color, type);
     }
 }

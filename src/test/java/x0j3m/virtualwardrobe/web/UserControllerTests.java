@@ -20,6 +20,7 @@ import x0j3m.virtualwardrobe.config.JwtFilter;
 import x0j3m.virtualwardrobe.model.Role;
 import x0j3m.virtualwardrobe.model.User;
 import x0j3m.virtualwardrobe.service.UserService;
+import x0j3m.virtualwardrobe.web.dto.LoginDTO;
 
 @WebMvcTest(controllers = UserController.class)
 @AutoConfigureMockMvc(addFilters = false)
@@ -94,6 +95,7 @@ public class UserControllerTests {
         User user = new User("username", "password", "firstName", "lastName", "email");
 
         Mockito.when(userService.saveUser(Mockito.any(User.class))).thenReturn(1L);
+        Mockito.when(userService.verify(Mockito.any(LoginDTO.class))).thenReturn("token");
 
         ResultActions response = mockMvc.perform(
                 MockMvcRequestBuilders.post("/user/register")

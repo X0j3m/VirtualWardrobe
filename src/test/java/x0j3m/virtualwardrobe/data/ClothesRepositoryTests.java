@@ -7,10 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import x0j3m.virtualwardrobe.model.Clothes;
-import x0j3m.virtualwardrobe.model.ClothesType;
-import x0j3m.virtualwardrobe.model.ClothesLayer;
-import x0j3m.virtualwardrobe.model.Color;
+import x0j3m.virtualwardrobe.model.*;
 
 import java.util.List;
 
@@ -24,6 +21,8 @@ public class ClothesRepositoryTests {
     private ColorRepository colorRepository;
     @Autowired
     private ClothesTypeRepository clothesTypeRepository;
+    @Autowired
+    private UserRepository userRepository;
 
     @BeforeEach
     void setUp() {
@@ -37,14 +36,16 @@ public class ClothesRepositoryTests {
         clothesTypeRepository.save(new ClothesType("testType1", ClothesLayer.ACCESSORY));
         clothesTypeRepository.save(new ClothesType("testType2", ClothesLayer.ACCESSORY));
         clothesTypeRepository.save(new ClothesType("testType3", ClothesLayer.ACCESSORY));
+        userRepository.save(new User("username", "password", "firstName", "lastName", "user@email.com"));
     }
 
     @Test
     void save_whenClothesDoesNotExists_shouldReturnSavedClothes() {
+        User user = userRepository.findAll().iterator().next();
         Color color = colorRepository.findAll().iterator().next();
         ClothesType type = clothesTypeRepository.findAll().iterator().next();
 
-        Clothes testClothes = new Clothes(color, type);
+        Clothes testClothes = new Clothes(user, color, type);
 
         Clothes saved = clothesRepository.save(testClothes);
 
@@ -56,14 +57,15 @@ public class ClothesRepositoryTests {
 
     @Test
     void save_whenClothesExists_shouldReturnUpdatedClothes() {
+        User user = userRepository.findAll().iterator().next();
         Color color = colorRepository.findAll().iterator().next();
         ClothesType type = clothesTypeRepository.findAll().iterator().next();
-        Clothes testClothes = new Clothes(color, type);
+        Clothes testClothes = new Clothes(user, color, type);
         Clothes savedClothes = clothesRepository.save(testClothes);
 
         Color newColor = new Color("newColor");
         Color savedNewColor = colorRepository.save(newColor);
-        Clothes updatedClothes = new Clothes(savedClothes.getId(), savedNewColor, type);
+        Clothes updatedClothes = new Clothes(savedClothes.getId(), user, savedNewColor, type);
 
         Assertions.assertNotNull(updatedClothes);
         Assertions.assertEquals(savedClothes.getId(), updatedClothes.getId());
@@ -80,11 +82,12 @@ public class ClothesRepositoryTests {
 
     @Test
     void findAll_whenTableIsNotEmpty_shouldReturnAllSavedClothes() {
+        User user = userRepository.findAll().iterator().next();
         Color color = colorRepository.findAll().iterator().next();
         ClothesType type = clothesTypeRepository.findAll().iterator().next();
-        Clothes clothes1 = new Clothes(color, type);
-        Clothes clothes2 = new Clothes(color, type);
-        Clothes clothes3 = new Clothes(color, type);
+        Clothes clothes1 = new Clothes(user, color, type);
+        Clothes clothes2 = new Clothes(user, color, type);
+        Clothes clothes3 = new Clothes(user, color, type);
 
         clothesRepository.save(clothes1);
         clothesRepository.save(clothes2);
@@ -98,10 +101,11 @@ public class ClothesRepositoryTests {
 
     @Test
     void findById_whenClothesExists_shouldReturnClothes() {
+        User user = userRepository.findAll().iterator().next();
         Color color = colorRepository.findAll().iterator().next();
         ClothesType type = clothesTypeRepository.findAll().iterator().next();
 
-        Clothes testClothes = new Clothes(color, type);
+        Clothes testClothes = new Clothes(user, color, type);
         Clothes saved = clothesRepository.save(testClothes);
 
         long id = saved.getId();
@@ -122,12 +126,13 @@ public class ClothesRepositoryTests {
 
     @Test
     void findByColor_Name_whenClothesExists_shouldReturnClothes() {
+        User user = userRepository.findAll().iterator().next();
         List<Color> colors = (List<Color>) colorRepository.findAll();
         List<ClothesType> types = (List<ClothesType>) clothesTypeRepository.findAll();
 
-        Clothes testClothes1 = new Clothes(colors.getFirst(), types.get(0));
-        Clothes testClothes2 = new Clothes(colors.getFirst(), types.get(1));
-        Clothes testClothes3 = new Clothes(colors.getLast(), types.get(2));
+        Clothes testClothes1 = new Clothes(user, colors.getFirst(), types.get(0));
+        Clothes testClothes2 = new Clothes(user, colors.getFirst(), types.get(1));
+        Clothes testClothes3 = new Clothes(user, colors.getLast(), types.get(2));
 
         clothesRepository.save(testClothes1);
         clothesRepository.save(testClothes2);
@@ -152,11 +157,12 @@ public class ClothesRepositoryTests {
 
     @Test
     void findByType_Name_whenClothesExists_shouldReturnClothes() {
+        User user = userRepository.findAll().iterator().next();
         List<Color> colors = (List<Color>) colorRepository.findAll();
         List<ClothesType> types = (List<ClothesType>) clothesTypeRepository.findAll();
-        Clothes testClothes1 = new Clothes(colors.getFirst(), types.getFirst());
-        Clothes testClothes2 = new Clothes(colors.get(1), types.getFirst());
-        Clothes testClothes3 = new Clothes(colors.getLast(), types.getLast());
+        Clothes testClothes1 = new Clothes(user, colors.getFirst(), types.getFirst());
+        Clothes testClothes2 = new Clothes(user, colors.get(1), types.getFirst());
+        Clothes testClothes3 = new Clothes(user, colors.getLast(), types.getLast());
 
         clothesRepository.save(testClothes1);
         clothesRepository.save(testClothes2);
@@ -187,12 +193,13 @@ public class ClothesRepositoryTests {
 
     @Test
     void deleteAll_whenTableIsNotEmpty_shouldDeleteAllClothes() {
+        User user = userRepository.findAll().iterator().next();
         Color color = colorRepository.findAll().iterator().next();
         ClothesType type = clothesTypeRepository.findAll().iterator().next();
 
-        Clothes clothes1 = new Clothes(color, type);
-        Clothes clothes2 = new Clothes(color, type);
-        Clothes clothes3 = new Clothes(color, type);
+        Clothes clothes1 = new Clothes(user, color, type);
+        Clothes clothes2 = new Clothes(user, color, type);
+        Clothes clothes3 = new Clothes(user, color, type);
 
         clothesRepository.save(clothes1);
         clothesRepository.save(clothes2);
@@ -213,9 +220,10 @@ public class ClothesRepositoryTests {
 
     @Test
     void deleteById_whenClothesExists_shouldDeleteClothes() {
+        User user = userRepository.findAll().iterator().next();
         Color color = colorRepository.findAll().iterator().next();
         ClothesType type = clothesTypeRepository.findAll().iterator().next();
-        Clothes testClothes = new Clothes(color, type);
+        Clothes testClothes = new Clothes(user, color, type);
         Clothes saved = clothesRepository.save(testClothes);
 
         long savedId = saved.getId();

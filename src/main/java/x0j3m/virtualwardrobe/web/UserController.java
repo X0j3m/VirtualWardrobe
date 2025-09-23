@@ -1,6 +1,5 @@
 package x0j3m.virtualwardrobe.web;
 
-import io.jsonwebtoken.Jwts;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
