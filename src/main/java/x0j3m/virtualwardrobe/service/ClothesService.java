@@ -11,27 +11,33 @@ public class ClothesService {
     private final ClothesRepository clothesRepository;
     private final ColorService colorService;
     private final ClothesTypeService clothesTypeService;
+    private final UserService userService;
 
     public ClothesService(ClothesRepository clothesRepository,
                           ColorService colorService,
-                          ClothesTypeService clothesTypeService) {
+                          ClothesTypeService clothesTypeService, UserService userService) {
         this.clothesRepository = clothesRepository;
         this.colorService = colorService;
         this.clothesTypeService = clothesTypeService;
+        this.userService = userService;
     }
 
-    public Long saveClothes(Long colorId, Long typeId) throws IllegalArgumentException {
-        if (colorId == null || typeId == null) {
+    public Long saveClothes(Long ownerId, Long colorId, Long typeId) throws IllegalArgumentException {
+        if (ownerId == null || colorId == null || typeId == null) {
             throw new IllegalArgumentException("Id cannot be null");
         }
-        if (colorId < 1 || typeId < 1) {
+        if (ownerId < 1 || colorId < 1 || typeId < 1) {
             throw new IllegalArgumentException("Id must be greater than 0");
         }
         if (colorService.getColor(colorId) == null || clothesTypeService.getClothesType(typeId) == null) {
             throw new IllegalArgumentException("Color or type does not exist");
         }
         try {
-            Clothes clothes = new Clothes(colorService.getColor(colorId), clothesTypeService.getClothesType(typeId));
+            Clothes clothes = new Clothes(
+                    userService.getUser(ownerId),
+                    colorService.getColor(colorId),
+                    clothesTypeService.getClothesType(typeId)
+            );
             return clothesRepository.save(clothes).getId();
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException(e.getMessage());

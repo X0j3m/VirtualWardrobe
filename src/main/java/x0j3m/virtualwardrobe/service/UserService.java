@@ -4,10 +4,14 @@ import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import x0j3m.virtualwardrobe.data.UserRepository;
 import x0j3m.virtualwardrobe.model.User;
+import x0j3m.virtualwardrobe.web.dto.LoginDTO;
 
 import java.util.Set;
 
@@ -15,12 +19,19 @@ import java.util.Set;
 public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final AuthenticationManager authenticationManager;
+    private final JwtService jwtService;
     private final ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
     private final Validator validator = factory.getValidator();
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository userRepository,
+                       PasswordEncoder passwordEncoder,
+                       AuthenticationManager authenticationManager,
+                       JwtService jwtService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.authenticationManager = authenticationManager;
+        this.jwtService = jwtService;
     }
 
     private void encodePassword(User user) {
@@ -106,5 +117,15 @@ public class UserService {
         } else {
             throw new IllegalArgumentException(violations.stream().findAny().get().getMessage());
         }
+    }
+
+    public String verify(LoginDTO dto) {
+        Authentication auth = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(dto.login(), dto.password())
+        );
+        if (auth.isAuthenticated()) {
+            return jwtService.generateToken(dto.login());
+        }
+        return null;
     }
 }

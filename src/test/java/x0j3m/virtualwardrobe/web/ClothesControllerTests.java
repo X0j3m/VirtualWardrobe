@@ -18,11 +18,12 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import x0j3m.virtualwardrobe.config.JwtFilter;
+import x0j3m.virtualwardrobe.model.*;
+import x0j3m.virtualwardrobe.service.ClothesTypeService;
+import x0j3m.virtualwardrobe.service.ColorService;
+import x0j3m.virtualwardrobe.service.UserService;
 import x0j3m.virtualwardrobe.web.dto.ClothesRequestDTO;
-import x0j3m.virtualwardrobe.model.Clothes;
-import x0j3m.virtualwardrobe.model.ClothesLayer;
-import x0j3m.virtualwardrobe.model.ClothesType;
-import x0j3m.virtualwardrobe.model.Color;
 import x0j3m.virtualwardrobe.service.ClothesService;
 
 import java.net.URI;
@@ -43,30 +44,43 @@ public class ClothesControllerTests {
         }
 
         @Bean
-        ClothesTypeController clothesTypeController() {
-            return Mockito.mock(ClothesTypeController.class);
+        ClothesTypeService clothesTypeService() {
+            return Mockito.mock(ClothesTypeService.class);
         }
 
         @Bean
-        ColorController colorController() {
-            return Mockito.mock(ColorController.class);
+        ColorService colorService() {
+            return Mockito.mock(ColorService.class);
+        }
+
+        @Bean
+        UserService userService() {
+            return Mockito.mock(UserService.class);
+        }
+
+        @Bean
+        JwtFilter jwtFilter() {
+            return Mockito.mock(JwtFilter.class);
         }
     }
 
     @Autowired
     private ClothesService clothesService;
     @Autowired
-    private ClothesTypeController clothesTypeController;
+    private ClothesTypeService clothesTypeService;
     @Autowired
-    private ColorController colorController;
+    private ColorService colorService;
+    @Autowired
+    private UserService userService;
     @Autowired
     private ObjectMapper objectMapper;
 
     @Test
     void getClothes_whenClothesExists_shouldReturnClothes() throws Exception {
+        User user = new User(1L, "username", "password", "firstName", "lastName", "user@email.com", Role.USER);
         Color color = new Color(1L, "testColor");
         ClothesType clothesType = new ClothesType(1L, "testClothesType", ClothesLayer.BASE_LAYER);
-        Clothes clothes = new Clothes(1L, color, clothesType);
+        Clothes clothes = new Clothes(1L, user, color, clothesType);
         Mockito.when(clothesService.getClothes(Mockito.anyLong())).thenReturn(clothes);
 
         ResultActions response = mockMvc.perform(MockMvcRequestBuilders.get("/clothes/1"));
@@ -105,15 +119,16 @@ public class ClothesControllerTests {
 
     @Test
     void getAllClothes_whenTableIsNotEmpty_shouldReturnAllSavedClothes() throws Exception {
+        User user = new User(1L, "username", "password", "firstName", "lastName", "user@email.com", Role.USER);
         Color color1 = new Color(1L, "testColor1");
         Color color2 = new Color(2L, "testColor2");
         Color color3 = new Color(3L, "testColor3");
         ClothesType clothesType1 = new ClothesType(1L, "testClothesType1", ClothesLayer.BASE_LAYER);
         ClothesType clothesType2 = new ClothesType(2L, "testClothesType2", ClothesLayer.MID_LAYER);
         ClothesType clothesType3 = new ClothesType(3L, "testClothesType3", ClothesLayer.BOTTOMWEAR);
-        Clothes clothes1 = new Clothes(1L, color1, clothesType1);
-        Clothes clothes2 = new Clothes(2L, color2, clothesType2);
-        Clothes clothes3 = new Clothes(3L, color3, clothesType3);
+        Clothes clothes1 = new Clothes(1L, user, color1, clothesType1);
+        Clothes clothes2 = new Clothes(2L, user, color2, clothesType2);
+        Clothes clothes3 = new Clothes(3L, user, color3, clothesType3);
         Mockito.when(clothesService.getAllClothes(Mockito.anyInt(), Mockito.anyInt(), Mockito.any())).thenReturn(List.of(clothes1, clothes2, clothes3));
 
         ResultActions response = mockMvc.perform(MockMvcRequestBuilders.get("/clothes"));
@@ -137,12 +152,13 @@ public class ClothesControllerTests {
     @Test
     @DirtiesContext
     void saveClothes_whenParametersAreValid_shouldReturnCreatedStatus() throws Exception {
+        User user = new User(1L, "username", "password", "firstName", "lastName", "user@email.com", Role.USER);
         Color color = new Color(1L, "testColor");
         ClothesType clothesType = new ClothesType(1L, "testClothesType", ClothesLayer.BASE_LAYER);
-        Clothes clothes = new Clothes(1L, color, clothesType);
-        ClothesRequestDTO requestDto = new ClothesRequestDTO(color.getId(), clothesType.getId());
+        Clothes clothes = new Clothes(1L, user, color, clothesType);
+        ClothesRequestDTO requestDto = new ClothesRequestDTO(user.getId(), color.getId(), clothesType.getId());
 
-        Mockito.when(clothesService.saveClothes(Mockito.anyLong(), Mockito.anyLong())).thenReturn(clothes.getId());
+        Mockito.when(clothesService.saveClothes(Mockito.anyLong(), Mockito.anyLong(), Mockito.anyLong())).thenReturn(clothes.getId());
 
         ResultActions response = mockMvc.perform(MockMvcRequestBuilders.post("/clothes").accept(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(requestDto)).contentType(MediaType.APPLICATION_JSON));
 
@@ -152,9 +168,9 @@ public class ClothesControllerTests {
     @Test
     @DirtiesContext
     void saveClothes_whenGivenColorDoesNotExists_shouldReturnBadRequestStatus() throws Exception {
-        ClothesRequestDTO requestDto = new ClothesRequestDTO(999L, 1L);
+        ClothesRequestDTO requestDto = new ClothesRequestDTO(1L, 999L, 1L);
 
-        Mockito.when(clothesService.saveClothes(Mockito.anyLong(), Mockito.anyLong())).thenThrow(new IllegalArgumentException());
+        Mockito.when(clothesService.saveClothes(Mockito.anyLong(), Mockito.anyLong(), Mockito.anyLong())).thenThrow(new IllegalArgumentException());
 
         ResultActions response = mockMvc.perform(MockMvcRequestBuilders.post("/clothes").accept(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(requestDto)).contentType(MediaType.APPLICATION_JSON));
 
@@ -164,9 +180,21 @@ public class ClothesControllerTests {
     @Test
     @DirtiesContext
     void saveClothes_whenGivenClothesTypeDoesNotExists_shouldReturnBadRequestStatus() throws Exception {
-        ClothesRequestDTO requestDto = new ClothesRequestDTO(1L, 999L);
+        ClothesRequestDTO requestDto = new ClothesRequestDTO(1L, 1L, 999L);
 
-        Mockito.when(clothesService.saveClothes(Mockito.anyLong(), Mockito.anyLong())).thenThrow(new IllegalArgumentException());
+        Mockito.when(clothesService.saveClothes(Mockito.anyLong(), Mockito.anyLong(), Mockito.anyLong())).thenThrow(new IllegalArgumentException());
+
+        ResultActions response = mockMvc.perform(MockMvcRequestBuilders.post("/clothes").accept(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(requestDto)).contentType(MediaType.APPLICATION_JSON));
+
+        response.andExpect(MockMvcResultMatchers.status().isBadRequest());
+    }
+
+    @Test
+    @DirtiesContext
+    void saveClothes_whenGivenUserDoesNotExists_shouldReturnBadRequestStatus() throws Exception {
+        ClothesRequestDTO requestDto = new ClothesRequestDTO(999L, 1L, 1L);
+
+        Mockito.when(clothesService.saveClothes(Mockito.anyLong(), Mockito.anyLong(), Mockito.anyLong())).thenThrow(new IllegalArgumentException());
 
         ResultActions response = mockMvc.perform(MockMvcRequestBuilders.post("/clothes").accept(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(requestDto)).contentType(MediaType.APPLICATION_JSON));
 
@@ -176,33 +204,46 @@ public class ClothesControllerTests {
     @Test
     @DirtiesContext
     void saveClothes_whenGivenIdsAreZeroNegativeOrNull_shouldReturnBadRequestStatus() throws Exception {
-        Mockito.when(clothesService.saveClothes(Mockito.anyLong(), Mockito.anyLong())).thenThrow(new IllegalArgumentException());
+        Mockito.when(clothesService.saveClothes(Mockito.anyLong(),Mockito.anyLong(), Mockito.anyLong())).thenThrow(new IllegalArgumentException());
 
         ClothesRequestDTO requestDto;
         ResultActions response;
 
-        requestDto = new ClothesRequestDTO(-1L, 1L);
+        requestDto = new ClothesRequestDTO(-1L, 1L, 1L);
 
         response = mockMvc.perform(MockMvcRequestBuilders.post("/clothes").accept(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(requestDto)).contentType(MediaType.APPLICATION_JSON));
 
         response.andExpect(MockMvcResultMatchers.status().isBadRequest());
 
 
-        requestDto = new ClothesRequestDTO(0L, 1L);
+        requestDto = new ClothesRequestDTO(0L, 1L, 1L);
 
         response = mockMvc.perform(MockMvcRequestBuilders.post("/clothes").accept(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(requestDto)).contentType(MediaType.APPLICATION_JSON));
 
         response.andExpect(MockMvcResultMatchers.status().isBadRequest());
 
 
-        requestDto = new ClothesRequestDTO(1L, -1L);
+        requestDto = new ClothesRequestDTO(1L, -1L, 1L);
 
         response = mockMvc.perform(MockMvcRequestBuilders.post("/clothes").accept(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(requestDto)).contentType(MediaType.APPLICATION_JSON));
 
         response.andExpect(MockMvcResultMatchers.status().isBadRequest());
 
 
-        requestDto = new ClothesRequestDTO(1L, 0L);
+        requestDto = new ClothesRequestDTO(1L, 0L, 1L);
+
+        response = mockMvc.perform(MockMvcRequestBuilders.post("/clothes").accept(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(requestDto)).contentType(MediaType.APPLICATION_JSON));
+
+        response.andExpect(MockMvcResultMatchers.status().isBadRequest());
+
+        requestDto = new ClothesRequestDTO(1L, 1L, -1L);
+
+        response = mockMvc.perform(MockMvcRequestBuilders.post("/clothes").accept(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(requestDto)).contentType(MediaType.APPLICATION_JSON));
+
+        response.andExpect(MockMvcResultMatchers.status().isBadRequest());
+
+
+        requestDto = new ClothesRequestDTO(1L, 1L, 0L);
 
         response = mockMvc.perform(MockMvcRequestBuilders.post("/clothes").accept(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(requestDto)).contentType(MediaType.APPLICATION_JSON));
 
@@ -243,17 +284,19 @@ public class ClothesControllerTests {
 
     @Test
     void updateClothes_whenClothesExistsAndRequestParametersAreValid_shouldReturnCreatedStatus() throws Exception {
+        User user = new User(1L, "username", "password", "firstName", "lastName", "user@email.com", Role.USER);
         Color color1 = new Color(1L, "testColorName1");
         Color color2 = new Color(2L, "testColorName2");
         ClothesType clothesType1 = new ClothesType(1L, "testClothesType1", ClothesLayer.HEADWEAR);
         ClothesType clothesType2 = new ClothesType(2L, "testClothesType2", ClothesLayer.FOOTWEAR);
-        Clothes clothes = new Clothes(1L, color1, clothesType1);
-        Clothes updatedClothes = new Clothes(1L, color2, clothesType2);
-        ClothesRequestDTO update = new ClothesRequestDTO(color2.getId(), clothesType2.getId());
+        Clothes clothes = new Clothes(1L,user, color1, clothesType1);
+        Clothes updatedClothes = new Clothes(1L, user,color2, clothesType2);
+        ClothesRequestDTO update = new ClothesRequestDTO(user.getId(), color2.getId(), clothesType2.getId());
 
         Mockito.when(clothesService.getClothes(Mockito.anyLong())).thenReturn(clothes);
-        Mockito.when(colorController.getColor(Mockito.anyLong())).thenReturn(new ResponseEntity<>(color1, HttpStatus.OK));
-        Mockito.when(clothesTypeController.getClothesType(Mockito.anyLong())).thenReturn(new ResponseEntity<>(clothesType1, HttpStatus.OK));
+        Mockito.when(colorService.getColor(Mockito.anyLong())).thenReturn(color1);
+        Mockito.when(clothesTypeService.getClothesType(Mockito.anyLong())).thenReturn(clothesType1);
+        Mockito.when(userService.getUser(Mockito.anyLong())).thenReturn(user);
         Mockito.when(clothesService.updateClothes(Mockito.anyLong(), Mockito.any())).thenReturn(updatedClothes);
 
         ResultActions response = mockMvc.perform(MockMvcRequestBuilders.patch("/clothes/1").accept(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(update)).contentType(MediaType.APPLICATION_JSON));
@@ -263,7 +306,7 @@ public class ClothesControllerTests {
 
     @Test
     void updateClothes_whenClothesDoesNotExists_shouldReturnNotFoundStatus() throws Exception {
-        ClothesRequestDTO update = new ClothesRequestDTO(1L, 1L);
+        ClothesRequestDTO update = new ClothesRequestDTO(1L,1L, 1L);
 
         Mockito.when(clothesService.getClothes(Mockito.anyLong())).thenReturn(null);
 
@@ -279,16 +322,18 @@ public class ClothesControllerTests {
 
     @Test
     void updateClothes_whenUpdateColorIsNull_shouldReturnIsCreatedStatus() throws Exception {
+        User user = new User(1L, "username", "password", "firstName", "lastName", "user@email.com", Role.USER);
         Color color = new Color(1L, "testColorName");
         ClothesType clothesType1 = new ClothesType(1L, "testClothesType1", ClothesLayer.HEADWEAR);
         ClothesType clothesType2 = new ClothesType(2L, "testClothesType2", ClothesLayer.FOOTWEAR);
-        Clothes clothes = new Clothes(1L, color, clothesType1);
-        Clothes updatedClothes = new Clothes(1L, color, clothesType2);
-        ClothesRequestDTO update = new ClothesRequestDTO(null, 1L);
+        Clothes clothes = new Clothes(1L, user,color, clothesType1);
+        Clothes updatedClothes = new Clothes(1L,user, color, clothesType2);
+        ClothesRequestDTO update = new ClothesRequestDTO(1L, null, 1L);
 
         Mockito.when(clothesService.getClothes(Mockito.anyLong())).thenReturn(clothes);
-        Mockito.when(colorController.getColor(Mockito.anyLong())).thenReturn(new ResponseEntity<>(color, HttpStatus.OK));
-        Mockito.when(clothesTypeController.getClothesType(Mockito.anyLong())).thenReturn(new ResponseEntity<>(clothesType1, HttpStatus.OK));
+        Mockito.when(colorService.getColor(Mockito.anyLong())).thenReturn(color);
+        Mockito.when(clothesTypeService.getClothesType(Mockito.anyLong())).thenReturn(clothesType1);
+        Mockito.when(userService.getUser(Mockito.anyLong())).thenReturn(user);
         Mockito.when(clothesService.updateClothes(Mockito.anyLong(), Mockito.any())).thenReturn(updatedClothes);
 
         ResultActions response = mockMvc.perform(MockMvcRequestBuilders
@@ -304,16 +349,45 @@ public class ClothesControllerTests {
 
     @Test
     void updateClothes_whenUpdateClothesTypeIsNull_shouldReturnIsCreatedStatus() throws Exception {
+        User user = new User(1L, "username", "password", "firstName", "lastName", "user@email.com", Role.USER);
         Color color1 = new Color(1L, "testColorName1");
         Color color2 = new Color(2L, "testColorName2");
         ClothesType clothesType = new ClothesType(1L, "testClothesType", ClothesLayer.BASE_LAYER);
-        Clothes clothes = new Clothes(1L, color1, clothesType);
-        Clothes updatedClothes = new Clothes(1L, color2, clothesType);
-        ClothesRequestDTO update = new ClothesRequestDTO(1L, null);
+        Clothes clothes = new Clothes(1L,user, color1, clothesType);
+        Clothes updatedClothes = new Clothes(1L, user,color2, clothesType);
+        ClothesRequestDTO update = new ClothesRequestDTO(1L,1L, null);
 
         Mockito.when(clothesService.getClothes(Mockito.anyLong())).thenReturn(clothes);
-        Mockito.when(colorController.getColor(Mockito.anyLong())).thenReturn(new ResponseEntity<>(color1, HttpStatus.OK));
-        Mockito.when(clothesTypeController.getClothesType(Mockito.anyLong())).thenReturn(new ResponseEntity<>(clothesType, HttpStatus.OK));
+        Mockito.when(colorService.getColor(Mockito.anyLong())).thenReturn(color1);
+        Mockito.when(clothesTypeService.getClothesType(Mockito.anyLong())).thenReturn(clothesType);
+        Mockito.when(userService.getUser(Mockito.anyLong())).thenReturn(user);
+        Mockito.when(clothesService.updateClothes(Mockito.anyLong(), Mockito.any())).thenReturn(updatedClothes);
+
+        ResultActions response = mockMvc.perform(MockMvcRequestBuilders
+                .patch("/clothes/1")
+                .accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(update))
+        );
+
+        response.andExpect(MockMvcResultMatchers.status().isCreated())
+                .andExpect(MockMvcResultMatchers.header().string("Location", "/clothes/1"));
+    }
+
+    @Test
+    void updateClothes_whenUpdateOwnerIsNull_shouldReturnIsCreatedStatus() throws Exception {
+        User user = new User(1L, "username", "password", "firstName", "lastName", "user@email.com", Role.USER);
+        Color color1 = new Color(1L, "testColorName1");
+        Color color2 = new Color(2L, "testColorName2");
+        ClothesType clothesType = new ClothesType(1L, "testClothesType", ClothesLayer.BASE_LAYER);
+        Clothes clothes = new Clothes(1L, user,color1, clothesType);
+        Clothes updatedClothes = new Clothes(1L, user,color2, clothesType);
+        ClothesRequestDTO update = new ClothesRequestDTO(null,1L,1L);
+
+        Mockito.when(clothesService.getClothes(Mockito.anyLong())).thenReturn(clothes);
+        Mockito.when(colorService.getColor(Mockito.anyLong())).thenReturn(color1);
+        Mockito.when(clothesTypeService.getClothesType(Mockito.anyLong())).thenReturn(clothesType);
+        Mockito.when(userService.getUser(Mockito.anyLong())).thenReturn(user);
         Mockito.when(clothesService.updateClothes(Mockito.anyLong(), Mockito.any())).thenReturn(updatedClothes);
 
         ResultActions response = mockMvc.perform(MockMvcRequestBuilders
@@ -329,13 +403,14 @@ public class ClothesControllerTests {
 
     @Test
     void updateClothes_whenUpdateColorIdDoesNotExist_shouldReturnNotFoundStatus() throws Exception {
+        User user = new User(1L, "username", "password", "firstName", "lastName", "user@email.com", Role.USER);
         Color color = new Color(1L, "testColorName");
         ClothesType clothesType = new ClothesType(1L, "testClothesType", ClothesLayer.HEADWEAR);
-        Clothes clothes = new Clothes(1L, color, clothesType);
-        ClothesRequestDTO update = new ClothesRequestDTO(999L, null);
+        Clothes clothes = new Clothes(1L,user, color, clothesType);
+        ClothesRequestDTO update = new ClothesRequestDTO(null,999L,null);
 
         Mockito.when(clothesService.getClothes(Mockito.anyLong())).thenReturn(clothes);
-        Mockito.when(colorController.getColor(Mockito.anyLong())).thenReturn(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+        Mockito.when(colorService.getColor(Mockito.anyLong())).thenReturn(null);
 
         ResultActions response = mockMvc.perform(MockMvcRequestBuilders
                 .patch("/clothes/1")
@@ -350,13 +425,36 @@ public class ClothesControllerTests {
 
     @Test
     void updateClothes_whenUpdateClothesTypeIdDoesNotExist_shouldReturnNotFoundStatus() throws Exception {
+        User user = new User(1L, "username", "password", "firstName", "lastName", "user@email.com", Role.USER);
         Color color = new Color(1L, "testColorName");
         ClothesType clothesType = new ClothesType(1L, "testClothesType", ClothesLayer.HEADWEAR);
-        Clothes clothes = new Clothes(1L, color, clothesType);
-        ClothesRequestDTO update = new ClothesRequestDTO(null, 999L);
+        Clothes clothes = new Clothes(1L, user,color, clothesType);
+        ClothesRequestDTO update = new ClothesRequestDTO(null,null, 999L);
 
         Mockito.when(clothesService.getClothes(Mockito.anyLong())).thenReturn(clothes);
-        Mockito.when(clothesTypeController.getClothesType(Mockito.anyLong())).thenReturn(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+        Mockito.when(clothesTypeService.getClothesType(Mockito.anyLong())).thenReturn(null);
+
+        ResultActions response = mockMvc.perform(MockMvcRequestBuilders
+                .patch("/clothes/1")
+                .accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(update))
+        );
+
+        response.andExpect(MockMvcResultMatchers.status().isCreated())
+                .andExpect(MockMvcResultMatchers.header().string("Location", "/clothes/1"));
+    }
+
+    @Test
+    void updateClothes_whenUpdateOwnerIdDoesNotExist_shouldReturnNotFoundStatus() throws Exception {
+        User user = new User(1L, "username", "password", "firstName", "lastName", "user@email.com", Role.USER);
+        Color color = new Color(1L, "testColorName");
+        ClothesType clothesType = new ClothesType(1L, "testClothesType", ClothesLayer.HEADWEAR);
+        Clothes clothes = new Clothes(1L, user,color, clothesType);
+        ClothesRequestDTO update = new ClothesRequestDTO(999L,null,null);
+
+        Mockito.when(clothesService.getClothes(Mockito.anyLong())).thenReturn(clothes);
+        Mockito.when(userService.getUser(Mockito.anyLong())).thenReturn(null);
 
         ResultActions response = mockMvc.perform(MockMvcRequestBuilders
                 .patch("/clothes/1")

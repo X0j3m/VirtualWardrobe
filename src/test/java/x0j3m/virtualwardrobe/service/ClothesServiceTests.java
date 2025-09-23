@@ -12,10 +12,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import x0j3m.virtualwardrobe.data.ClothesRepository;
-import x0j3m.virtualwardrobe.model.Clothes;
-import x0j3m.virtualwardrobe.model.ClothesLayer;
-import x0j3m.virtualwardrobe.model.ClothesType;
-import x0j3m.virtualwardrobe.model.Color;
+import x0j3m.virtualwardrobe.model.*;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -31,20 +28,23 @@ public class ClothesServiceTests {
     private ColorService colorService;
     @Mock
     private ClothesTypeService clothesTypeService;
+    @Mock
+    private UserService userService;
 
     @InjectMocks
     private ClothesService clothesService;
 
     @Test
     void saveClothes_whenClothesDoesNotExistAndParametersAreValid_shouldReturnSavedClothesId() {
+        User user = new User(1L, "username", "password", "firstName", "lastName", "user@email.com", Role.USER);
         Color color = new Color(1L, "testColor");
         ClothesType type = new ClothesType(1L, "testName", ClothesLayer.BASE_LAYER);
-        Clothes clothes = new Clothes(1L, color, type);
+        Clothes clothes = new Clothes(1L, user, color, type);
         Mockito.when(colorService.getColor(Mockito.any(Long.class))).thenReturn(color);
         Mockito.when(clothesTypeService.getClothesType(Mockito.any(Long.class))).thenReturn(type);
         Mockito.when(clothesRepository.save(Mockito.any())).thenReturn(clothes);
 
-        Long savedClothesId = clothesService.saveClothes(color.getId(), type.getId());
+        Long savedClothesId = clothesService.saveClothes(user.getId(), color.getId(), type.getId());
 
         Assertions.assertNotNull(savedClothesId);
         Assertions.assertEquals(clothes.getId(), savedClothesId);
@@ -52,49 +52,70 @@ public class ClothesServiceTests {
 
     @Test
     void saveClothes_whenColorIdIsNull_shouldThrowIllegalArgumentException() {
-        Assertions.assertThrows(IllegalArgumentException.class, () -> clothesService.saveClothes(null, 1L));
+        Assertions.assertThrows(IllegalArgumentException.class, () -> clothesService.saveClothes(1L, null, 1L));
     }
 
     @Test
     void saveClothes_whenClothesTypeIdIsNull_shouldThrowIllegalArgumentException() {
-        Assertions.assertThrows(IllegalArgumentException.class, () -> clothesService.saveClothes(1L, null));
+        Assertions.assertThrows(IllegalArgumentException.class, () -> clothesService.saveClothes(1L, 1L, null));
+    }
+
+    @Test
+    void saveClothes_whenOwnerIdIsNull_shouldThrowIllegalArgumentException() {
+        Assertions.assertThrows(IllegalArgumentException.class, () -> clothesService.saveClothes(null, 1L, 1L));
     }
 
     @Test
     void saveClothes_whenColorIdIsNegative_shouldThrowIllegalArgumentException() {
-        Assertions.assertThrows(IllegalArgumentException.class, () -> clothesService.saveClothes(-1L, 1L));
+        Assertions.assertThrows(IllegalArgumentException.class, () -> clothesService.saveClothes(1L, -1L, 1L));
     }
 
     @Test
     void saveClothes_whenClothesTypeIdIsNegative_shouldThrowIllegalArgumentException() {
-        Assertions.assertThrows(IllegalArgumentException.class, () -> clothesService.saveClothes(1L, -1L));
+        Assertions.assertThrows(IllegalArgumentException.class, () -> clothesService.saveClothes(1L, 1L, -1L));
+    }
+
+    @Test
+    void saveClothes_whenOwnerIdIsNegative_shouldThrowIllegalArgumentException() {
+        Assertions.assertThrows(IllegalArgumentException.class, () -> clothesService.saveClothes(-1L, 1L, 1L));
     }
 
     @Test
     void saveClothes_whenColorIdIsZero_shouldThrowIllegalArgumentException() {
-        Assertions.assertThrows(IllegalArgumentException.class, () -> clothesService.saveClothes(0L, 1L));
+        Assertions.assertThrows(IllegalArgumentException.class, () -> clothesService.saveClothes(1L, 0L, 1L));
     }
 
     @Test
     void saveClothes_whenClothesTypeIdIsZero_shouldThrowIllegalArgumentException() {
-        Assertions.assertThrows(IllegalArgumentException.class, () -> clothesService.saveClothes(1L, 0L));
+        Assertions.assertThrows(IllegalArgumentException.class, () -> clothesService.saveClothes(1L, 1L, 0L));
+    }
+
+    @Test
+    void saveClothes_whenOwnerIdIsZero_shouldThrowIllegalArgumentException() {
+        Assertions.assertThrows(IllegalArgumentException.class, () -> clothesService.saveClothes(0L, 1L, 1L));
     }
 
     @Test
     void saveClothes_whenColorIdDoesNotExist_shouldThrowIllegalArgumentException() {
-        Assertions.assertThrows(IllegalArgumentException.class, () -> clothesService.saveClothes(999L, 1L));
+        Assertions.assertThrows(IllegalArgumentException.class, () -> clothesService.saveClothes(1L, 999L, 1L));
     }
 
     @Test
-    void saveClothes_whenLongIdDoesNotExist_shouldThrowIllegalArgumentException() {
-        Assertions.assertThrows(IllegalArgumentException.class, () -> clothesService.saveClothes(1L, 999L));
+    void saveClothes_whenClothesTypeIdDoesNotExist_shouldThrowIllegalArgumentException() {
+        Assertions.assertThrows(IllegalArgumentException.class, () -> clothesService.saveClothes(1L, 1L, 999L));
+    }
+
+    @Test
+    void saveClothes_whenOwnerIdDoesNotExist_shouldThrowIllegalArgumentException() {
+        Assertions.assertThrows(IllegalArgumentException.class, () -> clothesService.saveClothes(999L, 1L, 1L));
     }
 
     @Test
     void getClothes_whenClothesIdExists_shouldReturnClothes() {
+        User user = new User(1L, "username", "password", "firstName", "lastName", "user@email.com", Role.USER);
         Color color = new Color(1L, "testColor");
         ClothesType type = new ClothesType(1L, "testName", ClothesLayer.BASE_LAYER);
-        Clothes clothes = new Clothes(1L, color, type);
+        Clothes clothes = new Clothes(1L, user, color, type);
         Mockito.when(clothesRepository.findById(Mockito.any())).thenReturn(Optional.of(clothes));
 
         Clothes found = clothesService.getClothes(clothes.getId());
@@ -137,6 +158,7 @@ public class ClothesServiceTests {
 
     @Test
     void getAllClothes_whenTableIsNotEmpty_shouldReturnAllSavedClothes() {
+        User user = new User(1L, "username", "password", "firstName", "lastName", "user@email.com", Role.USER);
         Color color1 = new Color(1L, "testColor1");
         Color color2 = new Color(2L, "testColor2");
         Color color3 = new Color(3L, "testColor3");
@@ -144,9 +166,9 @@ public class ClothesServiceTests {
         ClothesType type2 = new ClothesType(2L, "testName2", ClothesLayer.BASE_LAYER);
         ClothesType type3 = new ClothesType(3L, "testName3", ClothesLayer.BASE_LAYER);
 
-        Clothes clothes1 = new Clothes(1L, color1, type1);
-        Clothes clothes2 = new Clothes(2L, color2, type2);
-        Clothes clothes3 = new Clothes(3L, color3, type3);
+        Clothes clothes1 = new Clothes(1L, user, color1, type1);
+        Clothes clothes2 = new Clothes(2L, user, color2, type2);
+        Clothes clothes3 = new Clothes(3L, user, color3, type3);
 
         List<Clothes> clothesIterable = Arrays.asList(clothes1, clothes2, clothes3);
         Page<Clothes> page = new PageImpl<>(clothesIterable, PageRequest.of(0, 3), 3);
@@ -161,14 +183,15 @@ public class ClothesServiceTests {
 
     @Test
     void getClothesByColor_whenClothesWithGivenColorExists_shouldReturnAllClothesInGivenColor() {
+        User user = new User(1L, "username", "password", "firstName", "lastName", "user@email.com", Role.USER);
         Color color = new Color(1L, "testColor1");
         ClothesType type1 = new ClothesType(1L, "testName1", ClothesLayer.BASE_LAYER);
         ClothesType type2 = new ClothesType(2L, "testName2", ClothesLayer.BASE_LAYER);
         ClothesType type3 = new ClothesType(3L, "testName3", ClothesLayer.BASE_LAYER);
 
-        Clothes clothes1 = new Clothes(1L, color, type1);
-        Clothes clothes2 = new Clothes(2L, color, type2);
-        Clothes clothes3 = new Clothes(3L, color, type3);
+        Clothes clothes1 = new Clothes(1L, user, color, type1);
+        Clothes clothes2 = new Clothes(2L, user, color, type2);
+        Clothes clothes3 = new Clothes(3L, user, color, type3);
         List<Clothes> clothesList = Arrays.asList(clothes1, clothes2, clothes3);
 
         Mockito.when(clothesRepository.findByColor_Name(Mockito.any())).thenReturn(clothesList);
@@ -205,13 +228,14 @@ public class ClothesServiceTests {
 
     @Test
     void getClothesByType_whenClothesWithGivenTypeExists_shouldReturnAllClothesInGivenType() {
+        User user = new User(1L, "username", "password", "firstName", "lastName", "user@email.com", Role.USER);
         Color color1 = new Color(1L, "testColor1");
         Color color2 = new Color(2L, "testColor2");
         Color color3 = new Color(3L, "testColor3");
         ClothesType type = new ClothesType(1L, "testName", ClothesLayer.BASE_LAYER);
-        Clothes clothes1 = new Clothes(1L, color1, type);
-        Clothes clothes2 = new Clothes(2L, color2, type);
-        Clothes clothes3 = new Clothes(3L, color3, type);
+        Clothes clothes1 = new Clothes(1L, user, color1, type);
+        Clothes clothes2 = new Clothes(2L, user, color2, type);
+        Clothes clothes3 = new Clothes(3L, user, color3, type);
         List<Clothes> clothesList = Arrays.asList(clothes1, clothes2, clothes3);
 
         Mockito.when(clothesRepository.findByType_Name(Mockito.any())).thenReturn(clothesList);
@@ -245,9 +269,10 @@ public class ClothesServiceTests {
 
     @Test
     void deleteClothes_whenClothesIdExists_shouldDeleteClothes() {
+        User user = new User(1L, "username", "password", "firstName", "lastName", "user@email.com", Role.USER);
         Color color = new Color(1L, "testColor");
         ClothesType type = new ClothesType(1L, "testName", ClothesLayer.BASE_LAYER);
-        Clothes clothes = new Clothes(1L, color, type);
+        Clothes clothes = new Clothes(1L, user, color, type);
         Mockito.when(clothesRepository.findById(Mockito.any())).thenReturn(Optional.of(clothes));
 
         clothesService.deleteClothes(clothes.getId());
@@ -304,13 +329,14 @@ public class ClothesServiceTests {
 
     @Test
     void updateClothes_whenUpdateContainsValidData_shouldReturnUpdatedClothes() {
+        User user = new User(1L, "username", "password", "firstName", "lastName", "user@email.com", Role.USER);
         Color color = new Color(1L, "testColor");
         ClothesType type = new ClothesType(1L, "testName", ClothesLayer.BASE_LAYER);
-        Clothes clothes = new Clothes(1L, color, type);
+        Clothes clothes = new Clothes(1L, user, color, type);
         Color updateColor = new Color(2L, "newColor");
         ClothesType updateType = new ClothesType(2L, "newName", ClothesLayer.BASE_LAYER);
-        Clothes update = new Clothes(clothes.getId(), updateColor, updateType);
-        Clothes updated = new Clothes(clothes.getId(), update.getColor(), update.getType());
+        Clothes update = new Clothes(clothes.getId(), user, updateColor, updateType);
+        Clothes updated = new Clothes(clothes.getId(), user, update.getColor(), update.getType());
         Mockito.when(clothesRepository.findById(Mockito.any())).thenReturn(Optional.of(clothes));
         Mockito.when(clothesRepository.save(Mockito.any())).thenReturn(updated);
 
@@ -324,11 +350,12 @@ public class ClothesServiceTests {
 
     @Test
     void updateClothes_whenUpdateColorIsNull_shouldReturnUpdatedClothes() {
+        User user = new User(1L, "username", "password", "firstName", "lastName", "user@email.com", Role.USER);
         Color color = new Color(1L, "testColor");
         ClothesType type = new ClothesType(1L, "testName", ClothesLayer.BASE_LAYER);
-        Clothes clothes = new Clothes(1L, color, type);
-        Clothes update = new Clothes(clothes.getId(), null, type);
-        Clothes updated = new Clothes(clothes.getId(), clothes.getColor(), update.getType());
+        Clothes clothes = new Clothes(1L, user, color, type);
+        Clothes update = new Clothes(clothes.getId(), user, null, type);
+        Clothes updated = new Clothes(clothes.getId(), user, clothes.getColor(), update.getType());
         Mockito.when(clothesRepository.findById(Mockito.any())).thenReturn(Optional.of(clothes));
         Mockito.when(clothesRepository.save(Mockito.any())).thenReturn(updated);
 
@@ -341,11 +368,12 @@ public class ClothesServiceTests {
 
     @Test
     void updateClothes_whenUpdateTypeIsNull_shouldReturnUpdatedClothes() {
+        User user = new User(1L, "username", "password", "firstName", "lastName", "user@email.com", Role.USER);
         Color color = new Color(1L, "testColor");
         ClothesType type = new ClothesType(1L, "testName", ClothesLayer.BASE_LAYER);
-        Clothes clothes = new Clothes(1L, color, type);
-        Clothes update = new Clothes(clothes.getId(), color, null);
-        Clothes updated = new Clothes(clothes.getId(), update.getColor(), clothes.getType());
+        Clothes clothes = new Clothes(1L, user, color, type);
+        Clothes update = new Clothes(clothes.getId(), user, color, null);
+        Clothes updated = new Clothes(clothes.getId(), user, update.getColor(), clothes.getType());
         Mockito.when(clothesRepository.findById(Mockito.any())).thenReturn(Optional.of(clothes));
         Mockito.when(clothesRepository.save(Mockito.any())).thenReturn(updated);
 

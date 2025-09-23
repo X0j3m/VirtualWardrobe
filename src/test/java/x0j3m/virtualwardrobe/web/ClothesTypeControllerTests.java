@@ -16,10 +16,12 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import x0j3m.virtualwardrobe.config.JwtFilter;
 import x0j3m.virtualwardrobe.model.ClothesLayer;
 import x0j3m.virtualwardrobe.model.ClothesType;
 import x0j3m.virtualwardrobe.model.Color;
 import x0j3m.virtualwardrobe.service.ClothesTypeService;
+import x0j3m.virtualwardrobe.service.JwtService;
 
 import java.util.List;
 
@@ -36,6 +38,8 @@ public class ClothesTypeControllerTests {
         ClothesTypeService clothesTypeService() {
             return Mockito.mock(ClothesTypeService.class);
         }
+        @Bean
+        JwtFilter jwtFilter() {return Mockito.mock(JwtFilter.class);}
     }
 
     @Autowired

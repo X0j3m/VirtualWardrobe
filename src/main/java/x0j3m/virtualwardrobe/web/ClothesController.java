@@ -6,7 +6,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import x0j3m.virtualwardrobe.model.ClothesType;
 import x0j3m.virtualwardrobe.model.Color;
+import x0j3m.virtualwardrobe.model.User;
 import x0j3m.virtualwardrobe.service.ClothesTypeService;
+import x0j3m.virtualwardrobe.service.ColorService;
+import x0j3m.virtualwardrobe.service.UserService;
 import x0j3m.virtualwardrobe.web.dto.ClothesRequestDTO;
 import x0j3m.virtualwardrobe.model.Clothes;
 import x0j3m.virtualwardrobe.service.ClothesService;
@@ -17,15 +20,18 @@ import java.net.URI;
 @RequestMapping("/clothes")
 public class ClothesController {
     private final ClothesService clothesService;
-    private final ClothesTypeController clothesTypeController;
-    private final ColorController colorController;
+    private final ClothesTypeService clothesTypeService;
+    private final ColorService colorService;
+    private final UserService userService;
 
     public ClothesController(ClothesService clothesService,
-                             ClothesTypeController clothesTypeController,
-                             ColorController colorController) {
+                             ClothesTypeService clothesTypeService,
+                             ColorService colorService,
+                             UserService userService) {
         this.clothesService = clothesService;
-        this.clothesTypeController = clothesTypeController;
-        this.colorController = colorController;
+        this.clothesTypeService = clothesTypeService;
+        this.colorService = colorService;
+        this.userService = userService;
     }
 
     @GetMapping("{id}")
@@ -63,7 +69,9 @@ public class ClothesController {
     public ResponseEntity<Void> saveClothes(@RequestBody ClothesRequestDTO request) {
         try {
             Long savedId = clothesService.saveClothes(
-                    request.colorId(), request.typeId()
+                    request.ownerId(),
+                    request.colorId(),
+                    request.typeId()
             );
             URI location = URI.create("/clothes/" + savedId);
             return ResponseEntity.created(location).build();
@@ -100,34 +108,18 @@ public class ClothesController {
     }
 
     private Clothes clothesDTOToClothes(ClothesRequestDTO dto) {
-        Color color;
-        ClothesType clothesType;
-
         Long colorId = dto.colorId();
         Long typeId = dto.typeId();
+        Long ownerId = dto.ownerId();
 
-        if (colorId == null) {
-            color = null;
-        } else {
-            HttpStatus status = (HttpStatus) colorController.getColor(colorId).getStatusCode();
-            if (status != HttpStatus.OK) {
-                color = colorController.getColor(colorId).getBody();
-            } else {
-                color = null;
-            }
+        try {
+            Color color = colorService.getColor(colorId);
+            ClothesType clothesType = clothesTypeService.getClothesType(typeId);
+            User owner = userService.getUser(ownerId);
+            return new Clothes(owner, color, clothesType);
+        } catch (IllegalArgumentException e) {
+            return null;
         }
 
-        if (typeId == null) {
-            clothesType = null;
-        } else {
-            HttpStatus status = (HttpStatus) clothesTypeController.getClothesType(typeId).getStatusCode();
-            if (status != HttpStatus.OK) {
-                clothesType = clothesTypeController.getClothesType(typeId).getBody();
-            } else {
-                clothesType = null;
-            }
-        }
-
-        return new Clothes(color, clothesType);
     }
 }
